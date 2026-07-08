@@ -3,7 +3,7 @@
 
 `GoxLock` is a cli encryption tool made compeletly on `golang`. Providing many features that is needed for a powerful encryption
 
-![goxlock logo](assets/goxlock-logo.png)
+![goxlock logo](assets/png/goxlock-logo.png)
 
 
 ## Installation
@@ -250,7 +250,7 @@ Here will be the name of the contributors.
 
 This project uses the following License, check that out for more details.
 
-[LICENSE](LICENSE)
+[LICENCE](LICENCE)
 ## Acknowledgements
 
 - GOLang & module developers : For providing such an easy and robust language to work upon and easy modules to pass by.
