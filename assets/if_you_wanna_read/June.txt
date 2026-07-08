@@ -1,0 +1,43 @@
+// This is a Casual devlog , dont take it serious 
+If you want to read , you can :)
+
+
+
+30-06-2026 :: 2:19 AM
+
+Its been 40 days off till this application production , ahh man i am so tired ,
+This constant pressure of college and iit is fking drowning me , i am wondering do 
+doing this will ever help me out ?
+I think not , how can a degree get me a job that need skills . Maybe its just me who think like this
+But man education is so fked i cant take my head away.
+Btw I added mutex locking today , got me 1 hrs to do this thing and debug it.
+Yeah , ngl its a pretty good feature and i am using all my previous mistake knowledge in this
+Ok signing off . cya
+
+30-06-2026 :: 11:48 AM
+
+Isnt this morning again ?? i will add another feature , i guess i have 20 backlogs of my studies
+
+1-07-2026 :: 1 : 45 PM
+
+Man i tried adding a system to my thing but wtf it aint running . like its auto restart where you stopped
+but i has to store password somewhere and if its stored -> it can be decrypted , that why i removed it
+It took 2 days to build just to delete that thing
+Ahh day today , see ya guys
+
+07-07-2026 :: 10 : 00 PM
+
+Uhh , today a lot has happened , but i have finally made the working executable of the encryptor with installer
+The inno installer is doing pretty good ngl but yeah there may still be bugs
+Rn i am writting readme file and then i will test the encryptor .. I have test it alot but lets see i will test more
+
+Bro imma cry , wtf is wrong with Indian education system , its just loosing all its potential .
+like who tf give 50 percent weightage to school exams , like what the hell , i was already drowned in pressure JEE advance but now this also
+I mma cry man ,, like i aint doing my school things , i was ignoring that because of the jss papers ,fk imma leave  this damn ahh country
+No hates bro , i am in a lot of pressure , either i can do sheep roaming or follow my passion .
+and you know what indians preffer bots not talent , like its education system did that 
+The education minister is just a person that his father must regret before doing his shots
+and this goes to the all  the politics and corruption goin on ..
+FK you BJP , the only thing you did is religious warfare among the country and nothing else .
+MAY YOU ALL DIE IN DEVASTATING DEATH
+If you all wanna hate me , hate me , idc , but thats how indian education system is  

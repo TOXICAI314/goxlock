@@ -1,0 +1,11 @@
+# Ignore windows `.exe` maker data
+*.syso
+
+# Ignore the setup compiler
+*.iss
+
+# Ignore not needed json files needed file
+*.json
+
+# Ignore Any made exe
+*.exe

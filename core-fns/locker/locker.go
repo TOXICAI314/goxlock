@@ -1,0 +1,138 @@
+package locker
+
+import (
+	"fmt"
+	"goxlock/config"
+	corefns "goxlock/core-fns"
+	"goxlock/core-fns/mutex"
+	"goxlock/usersafety"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+)
+
+// - Locker
+// Will the lock the file in its `.g-lock` via encryption of the data
+// Once the data has been encrypted the only way to decrypt is via the password and nothing else
+func Locker(cfg *config.Config) error {
+
+	if cfg == nil {
+		return &config.UserSafetyError{
+			Cause: `Nil pointer dereference`,
+			Message: `A nil pointer of passed instead of a config pointer`,
+		}
+	} 
+	// - Pre Safety 
+	stats, err := os.Stat(cfg.FolderName)
+	if err == nil {
+		if !stats.IsDir() {
+			return &config.UserSafetyError{
+				Cause: `Non Folder file`,
+				Message: fmt.Sprintf("Cannot Walk over a file like structure : %s", cfg.FolderName),
+			}
+		}
+	} else {
+		return &config.UserSafetyError{
+			Cause: err.Error(),
+			Message: fmt.Sprintf("Error while confirming the given path : %s - %s", cfg.FolderName, err.Error()),
+		}
+	}
+
+	// Info : For safe zipping the following part will be done
+	selfDir := filepath.Dir(cfg.OutputName)
+	requiredFolderCreation := ``
+	if !filepath.IsAbs(cfg.OutputName) {
+		folderParent := filepath.Dir(cfg.FolderName)
+		relativeWorkingFolder := filepath.Join(folderParent,selfDir)
+		requiredFolderCreation = relativeWorkingFolder
+		cfg.OutputName = filepath.Join(relativeWorkingFolder,strings.TrimSuffix(filepath.Base(cfg.OutputName), filepath.Ext(cfg.OutputName))+config.ZipExt)
+		
+	} else {
+		zipFolderName := strings.TrimSuffix(filepath.Base(cfg.OutputName), filepath.Ext(cfg.OutputName)) + config.ZipExt
+		requiredFolderCreation = selfDir
+		cfg.OutputName = filepath.Join(filepath.Dir(cfg.OutputName),zipFolderName)
+	}
+	err = os.MkdirAll(requiredFolderCreation,0700)
+	if err != nil {
+		return &config.UserSafetyError{
+			Cause: err.Error(),
+			Message: fmt.Sprintf(`Cannot create the folder %s for the locking data to be stored`,selfDir),
+		}
+	}
+
+	// - Mutex Locking 
+	// Means getting the mutex for the writing stuff of the data  
+	// The mutex is from the os and cant be penetrated easily
+
+	mut, alrexist, err := mutex.NewMutex(cfg.FolderName)
+	if err != nil {
+		return &config.UserSafetyError{
+			Cause:   err.Error(),
+			Message: `An internal error has occured while Creating the Mutex for the given folder`,
+		}
+	}
+	defer mut.CloseMutex()
+	if alrexist {
+		return &config.UserSafetyError{
+			Cause:   `Mutex already exist`,
+			Message: fmt.Sprintf(`The mutex of the given folder %s is already there`, cfg.FolderName),
+		}
+	}
+
+	if !cfg.InstructData.UnSafe {
+		// Info : Folder security check
+		err = usersafety.SecureFolder(cfg)
+		if err != nil {
+			return err
+		}
+		// Info : Space check for the device
+		err = usersafety.CheckSpaceObject(cfg)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Info  : Its only for presentation  purpose 
+	// Its gives the time where the main zipping and encryption of the data starts
+	benchmarktimestart := time.Now()
+
+
+	err = corefns.Zip(cfg)
+	if err != nil {
+		return err
+	}
+
+	err = corefns.EncryptFileWithHeader(cfg)
+	if err != nil {
+		return err
+	}
+
+	// - Changes 
+
+	err = corefns.ReplaceZipwithGLock(cfg)
+	if err != nil {
+		return err
+	}
+
+	// Info :  This is just done to save the efficiency of the logger
+	// `if logger.Allowed` is used for the efficiency
+	if cfg.InstructData.Stats {
+		foldersize := stats.Size()
+		dirdata,_ := os.ReadDir(cfg.FolderName)
+		elapsedTime := time.Since(benchmarktimestart)
+		
+		msg := fmt.Sprintf(`
+				--- --- ---
+				Subject Name : %s
+				Folder Size : %d
+				Folder Material count : %d
+				Elapsed Time : %s
+				Average Speed : %.4f MB/seconds
+				--- --- ---
+			`,cfg.FolderName,foldersize,len(dirdata),elapsedTime.String(),(float64(foldersize)/(1024 * 1024))/elapsedTime.Seconds())
+		fmt.Println(msg)
+	}
+
+	return nil
+}
