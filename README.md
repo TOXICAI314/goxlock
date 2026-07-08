@@ -246,7 +246,7 @@ Here will be the name of the contributors.
 
 - Every Contributor is most welcomed by me <happy_emoji>.
 
-## License
+## Licence
 
 This project uses the following License, check that out for more details.
 
