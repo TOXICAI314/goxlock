@@ -8,13 +8,16 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 func ChangePasswordForFolder(cfg *config.Config) (error) {
 	if cfg == nil {
-		return &config.UserSafetyError{
+		return &config.FunctionCancelError{
 			Cause: `Nil pointer dereference`,
 			Message: `A nil pointer of passed instead of a config pointer`,
+			ElapsedTime: time.Now(),
+			Provider: `passwordchanger.ChangePasswordForFolder`,
 		}
 	} 
 
@@ -25,16 +28,19 @@ func ChangePasswordForFolder(cfg *config.Config) (error) {
 	
 	// - Pre Safety 
 	if _,err := os.Stat(encryptedfolder);err != nil {
-		return &config.UserSafetyError{
+		return &config.FunctionFailError{
 			Cause: err.Error(),
-			Message: `Cannot get stats of the given folder to Change the password`,
+			Message: fmt.Sprintf(`Cannot get stats of the given folder to Change the password : %s`,encryptedfolder),
+			ElapsedTime: time.Now(),
+			Provider: `passwordchanger.ChangePasswordForFolder`,
 		}
 	}
 	if ext := filepath.Ext(encryptedfolder);ext != config.LockExt {
-		return &config.DecryptionError{
+		return &config.FunctionCancelError{
 			Cause: `Wrong extension`,
-			Message: `The given Extension does not belong to the application 'goxlock'`,
-			Fix: fmt.Sprintf(`Make sure that the extension is named as : %s`,config.LockExt),
+			Message: fmt.Sprintf(`Make sure that the extension is named as : %s`,config.LockExt),
+			ElapsedTime: time.Now(),
+			Provider: `passwordchanger.ChangePasswordForFolder`,
 		}
 	}
 

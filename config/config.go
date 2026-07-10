@@ -8,7 +8,7 @@ import (
 )
 
 // Version : The way that the data will be read in the future
-const Version float32 = 1.0
+const Version float32 = 1.1
 
 // Name : The General name by which the app is running
 const Name string = `goxlock`
@@ -18,7 +18,7 @@ const Banner string = `
 	  ____  _____  _  _  _      ____   ____ _  __
 	 / ___|/ _ \ \/ / | | |    / __ \ / ___| |/ /
 	| |  _| | | \  /  | | |   | |  | | |   | ' / 
-    | |_| | |_| /  \  | | |___| |__| | |___| . \ 
+   	| |_| | |_| /  \  | | |___| |__| | |___| . \ 
 	 \____|\___/_/\_\ |_|_____|\____/ \____|_|\_\
 `
 // - Const Data

@@ -5,6 +5,7 @@ import (
 	"goxlock/config"
 	corefns "goxlock/core-fns"
 	"goxlock/core-fns/dpapi"
+	"goxlock/core-fns/header"
 	"goxlock/core-fns/mutex"
 	"goxlock/core-fns/scheduler"
 	"goxlock/core-fns/sessions"
@@ -19,9 +20,11 @@ import (
 // unlocks the locked extension file -> only if the header is correct && file has not been altered
 func Unlocker(cfg *config.Config) error {
 	if cfg == nil {
-		return &config.UserSafetyError{
+		return &config.FunctionCancelError{
 			Cause: `Nil pointer dereference`,
 			Message: `A nil pointer of passed instead of a config pointer`,
+			ElapsedTime: time.Now(),
+			Provider: `unlocker.Unlocker`,
 		}
 	}
 	targetglockfile := &cfg.FolderName
@@ -35,25 +38,19 @@ func Unlocker(cfg *config.Config) error {
 
 	// - Pre Safety 
 	if ext := filepath.Ext(*targetglockfile); ext != config.LockExt {
-		return &config.DecryptionError{
+		return &config.FunctionCancelError{
 			Cause:   `Invalid extension`,
 			Message: fmt.Sprintf("goxlock cant decrypt the data that is not in its native extension - %s", config.LockExt),
-			Fix: fmt.Sprintf(
-				`
-			Provided ->
-			{
-			ext : %s
-			}
-			Needed ->
-			{
-			ext : %s
-			}`, ext, config.LockExt),
+			ElapsedTime: time.Now(),
+			Provider: `unlocker.Unlocker`,
 		}
 	}
 	if _,err := os.Stat(*targetglockfile);err != nil {
-		return &config.UserSafetyError{
+		return &config.FunctionFailError{
 			Cause: err.Error(),
-			Message: `Invalid target file which stats cant be fetched out`,
+			Message: fmt.Sprintf(`Invalid target file which stats cant be fetched out : %s`,*targetglockfile),
+			ElapsedTime: time.Now(),
+			Provider: `unlocker.Unlocker`,
 		}
 	}
 
@@ -71,25 +68,31 @@ func Unlocker(cfg *config.Config) error {
 	}
 	err = os.MkdirAll(requiredFolderCreation,0700)
 	if err != nil {
-		return &config.UserSafetyError{
+		return &config.FunctionFailError{
 			Cause: err.Error(),
 			Message: fmt.Sprintf(`Cannot create the folder %s for the unlocking data to be stored`,selfDir),
+			ElapsedTime: time.Now(),
+			Provider: `unlocker.Unlocker`,
 		}
 	} 
 
 	// - Mutex Locking 
 	mut, alrexist, err := mutex.NewMutex(*targetglockfile)
 	if err != nil {
-		return &config.UserSafetyError{
+		return &config.FunctionFailError{
 			Cause:   err.Error(),
-			Message: `An internal error has occured while Creating the Mutex for the given folder`,
+			Message: fmt.Sprintf(`An internal error has occured while Creating the Mutex for the given folder : %s`,*targetglockfile),
+			ElapsedTime: time.Now(),
+			Provider: `unlocker.Unlocker`,
 		}
 	}
 	defer mut.CloseMutex()
 	if alrexist {
-		return &config.UserSafetyError{
+		return &config.FunctionCancelError{
 			Cause:   `Mutex already exist`,
 			Message: fmt.Sprintf(`The mutex of the given folder %s is already there`, cfg.FolderName),
+			ElapsedTime: time.Now(),
+			Provider: `unlocker.Unlocker`,
 		}
 	}
 
@@ -110,9 +113,11 @@ func Unlocker(cfg *config.Config) error {
 	// - Timeout Saefty 
 	if cfg.InstructData.Timeout > 0 {
 		if cfg.SessionID == `` {
-				return &config.UserSafetyError{
+				return &config.FunctionCancelError{
 					Cause:   `Cannot create a session out of an empty string`,
 					Message: `The given config Session is invalid as it is empty`,
+					ElapsedTime: time.Now(),
+				Provider: `unlocker.Unlocker`,
 				}
 			}
 
@@ -138,19 +143,15 @@ func Unlocker(cfg *config.Config) error {
 	lockfile := &cfg.FolderName
 	data, err := os.ReadFile(*lockfile)
 	if err != nil {
-		return &config.UnzipError{
+		return &config.FunctionFailError{
 			Cause:   err.Error(),
-			Message: `Cannot read from the file`,
-			Fix: `
-			Make sure the file is not:
-			1. Opened by too many application
-			2. Os restricted file
-			3. Self laid retrictions
-			`,
+			Message: fmt.Sprintf(`Cannot read from the locked file : %s`,*lockfile),
+			ElapsedTime: time.Now(),
+			Provider: `unlocker.Unlocker`,
 		}
 	}
 
-	plaindata, err := GetUnlockedData(cfg, data)
+	plaindata, err := header.GetUnlockedData(cfg, data)
 	if err != nil  {
 		return err
 	}
@@ -160,21 +161,19 @@ func Unlocker(cfg *config.Config) error {
 		return err
 	}
 
-	if cfg.InstructData.DeleteOriginal {
-		err = os.Remove(cfg.FolderName)
-		if err != nil {
-			return &config.UserSafetyError{
-				Cause:   err.Error(),
-				Message: fmt.Sprintf(`System refused to delete the resedue : %s`, cfg.FolderName),
-			}
-		}
-	}
-
 	newZipfilename := strings.TrimSuffix(*outFolder, filepath.Ext(*outFolder))
 	*outFolder = newZipfilename
 
 	if cfg.InstructData.Stats {
-		stats,_ := os.Stat(cfg.FolderName)
+		stats,err  := os.Stat(cfg.FolderName)
+		if err != nil {
+			return &config.FunctionFailError{
+				Cause: err.Error(),
+				Message: fmt.Sprintf(`Cannot get stats for the folder : %s`,cfg.FolderName),
+				ElapsedTime: time.Now(),
+				Provider: `unlocker.Unlocker`,
+			}
+		}
 		foldersize := stats.Size()
 		elapsedTime := time.Since(benchmarktimestart)
 
@@ -189,113 +188,17 @@ func Unlocker(cfg *config.Config) error {
 			`,cfg.FolderName,foldersize,elapsedTime.String(),(float64(foldersize)/(1024 * 1024))/elapsedTime.Seconds())
 		fmt.Println(msg)
 	}
+
+	if cfg.InstructData.DeleteOriginal {
+		err = os.Remove(cfg.FolderName)
+		if err != nil {
+			return &config.FunctionFailError{
+				Cause:   err.Error(),
+				Message: fmt.Sprintf(`System refused to delete the resedue : %s`, cfg.FolderName),
+				ElapsedTime: time.Now(),
+				Provider: `unlocker.Unlocker`,
+			}
+		}
+	}
 	return nil
-}
-
-// - GetUnlockedData 
-// will verify the unlocked file and will give the data of the file that is needed
-func GetUnlockedData(cfg *config.Config, rawData []byte) ([]byte, error) {
-	// - Pre Safety
-	switch {
-	case cfg == nil: 
-		return nil,&config.UserSafetyError{
-			Cause: `Nil pointer dereference`,
-			Message: `A nil pointer of passed instead of a config pointer`,
-		}
-	case rawData == nil :
-		return nil,&config.UserSafetyError{
-			Cause: `Nil pointer dereference`,
-			Message: `A nil pointer of passed instead of a raw data pointer`,
-		}
-	}
-	
-	header, encodeddata, err := config.ReadHeaderAndRest(rawData)
-	if err != nil  {
-		return nil, &config.UnzipError{
-			Cause:   err.Error(),
-			Message: `Cannot get header from the file`,
-			Fix: `
-			Make sure your file is not:
-			1. Altered by anyone
-			2. Made private or not allowing unlocking
-			`,
-		}
-	}
-
-	err = config.ValidateHeader(header)
-	if err != nil {
-		return nil, err
-	}
-
-	var sec *config.SharedEncryptionData = &config.SharedEncryptionData{
-		Salt:          header.Salt[:],
-		Nonce:         header.Nonce[:],
-		EncryptedData: encodeddata,
-	}
-
-	plaindata, err := corefns.Decrypt(sec, cfg)
-	if err != nil {
-		return nil,err
-	}
-
-	return plaindata, nil
-}
-
-// - VerifyUnlock
-// Will verify the given password and will provide error if there are any
-func VerifyUnlock(cfg *config.Config) error {
-	// - Pre Safety
-	if cfg == nil {
-		return &config.UserSafetyError{
-			Cause: `Nil pointer dereference`,
-			Message: `A nil pointer of passed instead of a config pointer`,
-		}
-	} 
-	if ext := filepath.Ext(cfg.FolderName); ext != config.LockExt {
-		return &config.UserSafetyError{
-			Cause:   fmt.Sprintf(`Cannot Verify a non '%s' folder`, config.LockExt),
-			Message: fmt.Sprintf(`The given extension is %s ; needed -> %s`, ext, config.LockExt),
-		}
-	}
-
-	data, err := os.ReadFile(cfg.FolderName)
-	if err != nil {
-		return &config.UserSafetyError{
-			Cause:   err.Error(),
-			Message: fmt.Sprintf(`Cannot read from the given file - %s`, cfg.FolderName),
-		}
-	}
-	_, err = GetUnlockedData(cfg, data)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// - Header
-// Gives the raw header of the `g-lock` file
-func Header(file string) (*config.Header,error) {
-	// - Pre Safety
-	if ext := filepath.Ext(file);ext != config.LockExt {
-		return nil,&config.UserSafetyError {
-			Cause: `Unwanted extension`,
-			Message: fmt.Sprintf(`Wanted - %s ; Given - %s`,config.LockExt,ext),
-		}
-	}
-
-	data,err := os.ReadFile(file)
-	if err != nil {
-		return nil,&config.UserSafetyError{
-			Cause: err.Error(),
-			Message: `Cannot read from the file`,
-		}
-	}
-
-	header,_,err := config.ReadHeaderAndRest(data)
-	if err != nil {
-		return nil,err
-	}
-
-	return header,nil
 }

@@ -1,85 +1,32 @@
 package config
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
-// - EncryptionError 
-// EncryptionError : The error which arose due to undesirables in the configuration while encrypting
-type EncryptionError struct {
-	Cause   string
-	Message string
-	Fix     string
+// - FunctionFailError
+// Function Fail error will be shown when a function has failed due to its internal structure or underlying function
+type FunctionFailError struct {
+	Cause       string
+	Message     string
+	ElapsedTime time.Time
+	Provider    string
 }
 
-func (ec *EncryptionError) Error() string {
-	return fmt.Sprintf("Cause : %s\nMessage : %s\nFix : %s", ec.Cause, ec.Message, ec.Fix)
+func (ff *FunctionFailError) Error() string {
+	return fmt.Sprintf("Cause (The function Failed because): %s\nMessage : %s\nCrashed Time : %s\nCrash Function : %s", ff.Cause, ff.Message, ff.ElapsedTime.Format("15:04:05"), ff.Provider)
 }
 
-// - ZipError S 
-// ZipError : arises due to the formation of broken commitments in zipping process
-type ZipError struct {
-	Cause   string
-	Message string
-	Fix     string
+// - FunctionCancelError
+// The error which is formed when the function returns abnormally due to wrong configuration
+type FunctionCancelError struct {
+	Cause 		string
+	Message 	string
+	ElapsedTime	time.Time
+	Provider 	string
 }
 
-func (uzp *ZipError) Error() string {
-	return fmt.Sprintf("Cause : %s\nMessage : %s\nFix : %s", uzp.Cause, uzp.Message, uzp.Fix)
-}
-
-// - UnzipError 
-// UnzipError : arises due to the formation of broken commitments in unzipping process
-type UnzipError struct {
-	Cause   string
-	Message string
-	Fix     string
-}
-
-func (uzp *UnzipError) Error() string {
-	return fmt.Sprintf("Cause : %s\nMessage : %s\nFix : %s", uzp.Cause, uzp.Message, uzp.Fix)
-}
-
-
-// - UserSafety 
-type UserSafetyError struct {
-	Cause   string
-	Message string
-}
-
-// Info : Making sure that this lies in the error interface
-func (usersafe *UserSafetyError) Error() string {
-	return fmt.Sprintf("Cause : %s\nMessage : %s", usersafe.Cause, usersafe.Message)
-}
-
-// - DecryptionError
-// DecryptionError : The error which arose due to undesirables in the configuration while decrypting
-type DecryptionError struct {
-	Cause   string
-	Message string
-	Fix     string
-}
-
-func (dc *DecryptionError) Error() string {
-	return fmt.Sprintf("Cause : %s\nMessage : %s\nFix : %s", dc.Cause, dc.Message, dc.Fix)
-}
-
-// - ChnagePasswordError - //
-type ChnagePasswordError struct {
-	Cause 	string
-	Message	string
-	Fix		string
-}
-
-func (cpe *ChnagePasswordError) Error() string {
-	return fmt.Sprintf("Cause : %s\nMessage : %s\nFix : %s", cpe.Cause, cpe.Message, cpe.Fix)
-}
-
-// - CheckError 
-type CheckError struct {
-	Cause 	string
-	Message	string
-	Fix		string
-}
-
-func (e *CheckError) Error() string {
-	return fmt.Sprintf("Cause : %s\nMessage : %s\nFix : %s", e.Cause, e.Message, e.Fix)
+func (fc *FunctionCancelError) Error() string {
+	return fmt.Sprintf("Cause (The function abnormally ended): %s\nMessage : %s\nCrashed Time : %s\nCrash Function : %s",fc.Cause,fc.Message,fc.ElapsedTime.Format(`15:04:05`),fc.Provider)
 }

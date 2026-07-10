@@ -1,9 +1,11 @@
 package corefns
 
 import (
+	"fmt"
 	"goxlock/config"
 	"os"
 	"strings"
+	"time"
 )
 
 // - ReplaceZipwithGLock
@@ -11,9 +13,11 @@ import (
 func ReplaceZipwithGLock(cfg *config.Config) error {
 	
 	if cfg == nil {
-		return &config.UserSafetyError{
+		return &config.FunctionCancelError{
 			Cause: `Nil pointer dereference`,
 			Message: `A nil pointer of passed instead of a config pointer`,
+			ElapsedTime: time.Now(),
+			Provider: `corefns.ReplaceZipWithGlock`,
 		}
 	}
 	
@@ -22,15 +26,19 @@ func ReplaceZipwithGLock(cfg *config.Config) error {
 	// - Pre Safety 
 
 	if _,err := os.Stat(*zipfile);err != nil {
-		return &config.UserSafetyError{
+		return &config.FunctionFailError{
 			Cause: err.Error(),
-			Message: `Cannot find the zipped file`,
+			Message: fmt.Sprintf(`Cannot find the zipped file : %s`,*zipfile),
+			ElapsedTime: time.Now(),
+			Provider: `corefns.ReplaceZipWithGlock`,
 		}
 	}
 	if _,err := os.Stat(*target);err != nil {
-		return &config.UserSafetyError{
+		return &config.FunctionFailError{
 			Cause: err.Error(),
-			Message: `Cannot find the target file`,
+			Message: fmt.Sprintf(`Cannot find the target file : %s`,*target),
+			ElapsedTime: time.Now(),
+			Provider: `corefns.ReplaceZipWithGlock`,
 		}
 	}
 

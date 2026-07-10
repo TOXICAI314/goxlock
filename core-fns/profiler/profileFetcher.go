@@ -6,6 +6,7 @@ import (
 	"goxlock/config"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 // - ProfileFetcher
@@ -13,38 +14,49 @@ import (
 func (pf *Profiler) Fetch() error {
 	// - Pre Safety
 	if !filepath.IsAbs(ProfilerAppDataPath) {
-		return &config.UserSafetyError{
+		return &config.FunctionCancelError{
 			Cause: `Cwd folder detected`,
-			Message: `Absoulte folder needed for storing the Profile`,
+			Message: fmt.Sprintf(`Absoulte folder needed for storing the Profile : %s`,ProfilerAppDataPath),
+			ElapsedTime: time.Now(),
+			Provider: `profiler.Profiler.Fetch`,
 		}
 	}
 	err := os.MkdirAll(ProfilerAppDataPath, 0700)
 	if err != nil {
-		return &config.UserSafetyError{
+		return &config.FunctionFailError{
 			Cause:   err.Error(),
-			Message: `Cannot make a folder to store the profile`,
+			Message: fmt.Sprintf(`Cannot make a folder to store the profile : %s`,ProfilerAppDataPath),
+			ElapsedTime: time.Now(),
+			Provider: `profiler.Profiler.Fetch`,
 		}
 	}
 	if pf.Name == `` {
-		return &config.UserSafetyError{
+		return &config.FunctionCancelError{
 			Cause:   `Invalid profile name`,
 			Message: `Provide a Valid name to be taken for the profile`,
+			ElapsedTime: time.Now(),
+			Provider: `profiler.Profiler.Fetch`,
 		}
 	}
 
-	data,err := os.ReadFile(filepath.Join(ProfilerAppDataPath, fmt.Sprintf(ProfilePattern, config.Name, pf.Name)))
+	x_path := filepath.Join(ProfilerAppDataPath, fmt.Sprintf(ProfilePattern, config.Name, pf.Name))
+	data,err := os.ReadFile(x_path)
 	if err != nil {
-		return &config.UserSafetyError{
+		return &config.FunctionFailError{
 			Cause: err.Error(),
-			Message : `Cannot fetch data from the profile because of the Given Reason`,
+			Message : fmt.Sprintf(`Cannot fetch data from the profile because of the Given Reason : %s`,x_path),
+			ElapsedTime: time.Now(),
+			Provider: `profiler.Profiler.Fetch`,
 		}
 	}
 	
 	err = json.Unmarshal(data,pf)
 	if err != nil {
-		return &config.UserSafetyError{
+		return &config.FunctionFailError{
 			Cause: err.Error(),
-			Message: `Cannot dump the file data into the struct because of the Given Reason`,
+			Message: fmt.Sprintf(`Cannot dump the file data into the struct because of the Given Reason : %+v`,data),
+			ElapsedTime: time.Now(),
+			Provider: `profiler.Profiler.Fetch`,
 		}
 	}
 

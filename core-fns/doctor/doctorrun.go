@@ -8,12 +8,13 @@ import (
 	passwordchanger "goxlock/core-fns/password-changer"
 	"goxlock/core-fns/profiler"
 	"goxlock/core-fns/unlocker"
+	"goxlock/core-fns/verify"
 	"goxlock/utils"
 	"os"
 	"time"
 )
 
-// - Start 
+// - Start
 // This function automatically runs all the comands to check that is there any error formed while the app is running on a device
 func (dc *Doctor) Start() error {
 	dc.config.SessionID = utils.CreateSessionID() 
@@ -43,7 +44,7 @@ func (dc *Doctor) Start() error {
 	if err != nil {
 		return err
 	}
-	err = unlocker.VerifyUnlock(&dc.config)
+	err = verify.VerifyUnlock(&dc.config)
 	if err != nil {
 		return err
 	}
@@ -120,7 +121,6 @@ func (dc *Doctor) Start() error {
 	fmt.Println(`--- --- ---`)
 	starttime = time.Now()
 	logger_x,err := logger.Log(&dc.config,nil)
-	logger_x.Allowed = true
 	if err != nil {
 		return err
 	}
@@ -139,9 +139,11 @@ func (dc *Doctor) Start() error {
 	fmt.Printf("Success : Logger Read Passed %+v\n",time.Since(starttime))
 	err = os.Remove(logger_x.Place)
 	if err != nil {
-		return &config.UserSafetyError{
+		return &config.FunctionFailError{
 			Cause: err.Error(),
 			Message: fmt.Sprintf(`Error in removing log file - %s`,logger_x.Place),
+			ElapsedTime: time.Now(),
+			Provider: `dc.Doctor.Start`,
 		}
 	}
 	fmt.Println(`--- --- ---`)

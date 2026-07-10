@@ -1,9 +1,11 @@
 package profiler
 
 import (
+	"fmt"
 	"goxlock/config"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 // - Update
@@ -11,28 +13,36 @@ import (
 func (pf *Profiler) Update(outname string, instruction *config.Instructions) error {
 	// - Pre Safety
 	if instruction == nil {
-		return &config.UserSafetyError{
+		return &config.FunctionCancelError{
 			Cause:   `Nil Pointer dereference`,
 			Message: `The given instructions is a pointer to nil`,
+			ElapsedTime: time.Now(),
+			Provider: `profiler.Profiler.Update`,
 		}
 	}
 	if !filepath.IsAbs(ProfilerAppDataPath) {
-		return &config.UserSafetyError{
+		return &config.FunctionCancelError{
 			Cause:   `Cwd folder detected`,
-			Message: `Absoulte folder needed for storing the Profile`,
+			Message: fmt.Sprintf(`Absoulte folder needed for storing the Profile : %s`,ProfilerAppDataPath),
+			ElapsedTime: time.Now(),
+			Provider: `profiler.Profiler.Update`,
 		}
 	}
 	err := os.MkdirAll(ProfilerAppDataPath, 0700)
 	if err != nil {
-		return &config.UserSafetyError{
+		return &config.FunctionFailError{
 			Cause:   err.Error(),
-			Message: `Cannot make a folder to store the profile`,
+			Message: fmt.Sprintf(`Cannot make a folder to store the profile: %s`,ProfilerAppDataPath),
+			ElapsedTime: time.Now(),
+			Provider: `profiler.Profiler.Update`,
 		}
 	}
 	if pf.Name == `` {
-		return &config.UserSafetyError{
+		return &config.FunctionCancelError{
 			Cause:   `Invalid profile name`,
 			Message: `Provide a Valid name to be taken for the profile`,
+			ElapsedTime: time.Now(),
+			Provider: `profiler.Profiler.Update`,
 		}
 	}
 

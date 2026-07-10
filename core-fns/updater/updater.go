@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 // - Release
@@ -38,33 +39,41 @@ func CheckForUpdate() error {
 	url := `https://api.github.com/repos/TOXICAI314/goxlock/releases/latest`
 	resp,err := http.Get(url)
 	if err != nil {
-		return &config.UserSafetyError{
+		return &config.FunctionFailError{
 			Cause: err.Error(),
 			Message: fmt.Sprintf(`No such web data or history found on - %s`,url),
+			ElapsedTime: time.Now(),
+			Provider: `unlocker.CheckUpdates`,
 		}
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return &config.UserSafetyError{
+		return &config.FunctionCancelError{
 			Cause: `Expected an ok status code`,
 			Message: fmt.Sprintf(`Expected a 200 status code , got - %d`,resp.StatusCode),
+			ElapsedTime: time.Now(),
+			Provider: `unlocker.CheckUpdates`,
 		}
 	}
 
 	data,err := io.ReadAll(resp.Body)
 	if err != nil {
-		return &config.UserSafetyError{
+		return &config.FunctionFailError{
 			Cause: err.Error(),
 			Message: `The given data is not in readable format`,
+			ElapsedTime: time.Now(),
+			Provider: `unlocker.CheckUpdates`,
 		}
 	}
 
 	var release Release
 	err = json.Unmarshal(data,&release)
 	if err != nil {
-		return &config.UserSafetyError{
+		return &config.FunctionFailError{
 			Cause: err.Error(),
 			Message: `Expected a json like data but got otherwise`,
+			ElapsedTime: time.Now(),
+			Provider: `unlocker.CheckUpdates`,
 		}
 	}
 
@@ -83,9 +92,11 @@ func CheckForUpdate() error {
 
 	permittedTempFile,err := os.CreateTemp(``,`goxlock-updated-installer-*.exe`)
 	if err != nil {
-		return &config.UserSafetyError{
+		return &config.FunctionFailError{
 			Cause: `Access denied to the temp dir`,
 			Message: `The access to the temporart directory is not given`,
+			ElapsedTime: time.Now(),
+			Provider: `unlocker.CheckUpdates`,
 		}
 	}
 	defer permittedTempFile.Close()
@@ -98,24 +109,30 @@ func CheckForUpdate() error {
 		}
 		exedresp,err := http.Get(data.BrowserDownloadURL)
 		if err != nil {
-			return &config.UserSafetyError{
+			return &config.FunctionFailError{
 				Cause: err.Error(),
 				Message:fmt.Sprintf(`Cannot fetch from the the url that is given for the latest update - %s`,release.Assets[0].BrowserDownloadURL),
+				ElapsedTime: time.Now(),
+				Provider: `unlocker.CheckUpdates`,
 			}
 		}
 		defer exedresp.Body.Close()
 		if resp.StatusCode != http.StatusOK {
-			return &config.UserSafetyError{
+			return &config.FunctionCancelError{
 				Cause: `Expected an ok status code`,
 				Message: fmt.Sprintf(`Expected a 200 status code , got - %d`,resp.StatusCode),
+				ElapsedTime: time.Now(),
+				Provider: `unlocker.CheckUpdates`,
 			}
 		}
 
 		_,err = io.Copy(permittedTempFile,exedresp.Body)
 		if err != nil {
-			return &config.UserSafetyError{
+			return &config.FunctionFailError{
 				Cause: err.Error(),
 				Message: `Cannot copy the data into the temp file to install the update`,
+				ElapsedTime: time.Now(),
+				Provider: `unlocker.CheckUpdates`,
 			}
 		}
 		index = i
@@ -123,9 +140,11 @@ func CheckForUpdate() error {
 	}
 
 	if !found {
-		return &config.UserSafetyError{
+		return &config.FunctionCancelError{
 			Cause: `No exe url found to download`,
 			Message: `Expected exe url got none`,
+			ElapsedTime: time.Now(),
+			Provider: `unlocker.CheckUpdates`,
 		}
 	} 
 
@@ -133,9 +152,11 @@ func CheckForUpdate() error {
 	hash := sha256.New()
 	_,err = io.Copy(hash,permittedTempFile)
 	if err != nil {
-		return &config.UserSafetyError{
+		return &config.FunctionFailError{
 			Cause: err.Error(),
 			Message: `The given hash cannot be made from the downloaded file`,
+			ElapsedTime: time.Now(),
+			Provider: `unlocker.CheckUpdates`,
 		}
 	}
 	actualDigest := fmt.Sprintf("%x", hash.Sum(nil))
@@ -144,9 +165,11 @@ func CheckForUpdate() error {
 	expectedDigest := strings.TrimPrefix(givenDigest, "sha256:")
 
 	if !strings.EqualFold(actualDigest, expectedDigest) {
-		return &config.UserSafetyError{
+		return &config.FunctionCancelError{
 			Cause: `Unmatched Hashes`,
 			Message: fmt.Sprintf("The hashes are unmatched from the provided hash\nProvided - %s\nExpected - %s",actualDigest,expectedDigest),
+			ElapsedTime: time.Now(),
+			Provider: `unlocker.CheckUpdates`,
 		}
 	}
 
@@ -158,9 +181,11 @@ func CheckForUpdate() error {
 			)
 	err = cmd.Start()
 	if err != nil {
-		return &config.UserSafetyError{
+		return &config.FunctionFailError{
 			Cause: err.Error(),
 			Message: `Cannot start the update of the executable file`,
+			ElapsedTime: time.Now(),
+			Provider: `unlocker.CheckUpdates`,
 		}
 	}
 	fmt.Println(`Exitting the Program to redownload the application`)

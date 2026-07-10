@@ -2,12 +2,13 @@ package dpapi
 
 import (
 	"goxlock/config"
+	"time"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
 )
 
-// - Dlls 
+// - Dlls
 // Dlls will be used to call the windows encryption agents -> Encryption is unique per user
 var (
 	// crypt32 -> A cryptography dll for the windows system
@@ -36,10 +37,11 @@ const (
 func Protect(data []byte) ([]byte, error) {
 	// - Pre Safety Check 
 	if data == nil {
-		return nil, &config.EncryptionError{
-			Cause:   `Data length = 0 or nil`,
+		return nil, &config.FunctionCancelError{
+			Cause:   `Data is nil`,
 			Message: `Cannot encypt the data because of its length`,
-			Fix:     `Provide the data that is : Atleast a character long`,
+			ElapsedTime: time.Now(),
+			Provider: `dpapi.Protect`,
 		}
 	}
 
@@ -93,14 +95,11 @@ func Protect(data []byte) ([]byte, error) {
 	// Which have its own value making : err != nil
 	// Therefore for low level work : always use r1 == 0
 	if r1 == 0 {
-		return nil, &config.EncryptionError{
+		return nil, &config.FunctionFailError{
 			Cause:   err.Error(),
 			Message: `Encryption Failed due to local dll failures`,
-			Fix: ` Make sure:
-			1. Windows Dll are place correct
-			2. Have all dependencies
-			3. Version are upto date (More chances)
-			`,
+			ElapsedTime: time.Now(),
+			Provider: `dpapi.Portect`,
 		}
 	}
 

@@ -2,6 +2,7 @@ package dpapi
 
 import (
 	"goxlock/config"
+	"time"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
@@ -45,16 +46,11 @@ func Unprotect(data []byte) ([]byte, error) {
 	)
 
 	if r1 == 0 {
-		return nil, &config.DecryptionError{
+		return nil, &config.FunctionFailError{
 			Cause:   err.Error(),
 			Message: `Decryption failed due to internal dll erros`,
-			Fix: `
-			Make sure:
-			1. On the same Machine
-			2. Being on the same user account
-			3. Enviroment -> Virtual
-			4. Bad password
-			`,
+			Provider: `dpapi.Unprotect`,
+			ElapsedTime: time.Now(),
 		}
 	}
 

@@ -6,6 +6,7 @@ import (
 	"goxlock/core-fns/locker"
 	"goxlock/core-fns/scheduler"
 	"goxlock/core-fns/sessions"
+	"time"
 )
 
 // - Relocker
@@ -13,9 +14,11 @@ import (
 // It dont need config upport as it can read it own data forming `Session`
 func Relocker(sessionId string) error {
 	if sessionId == `` {
-		return &config.UserSafetyError{
+		return &config.FunctionCancelError{
 			Cause: `Empty id string`,
 			Message: `Given an empty id to work by`,
+			ElapsedTime: time.Now(),
+			Provider: `relocker.Relock`,
 		}
 	}
 

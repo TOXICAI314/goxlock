@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"goxlock/config"
 	"os/exec"
+	"time"
 )
 
 // - DeletSchedule()
@@ -12,9 +13,11 @@ func DeleteSchedule(sessionID string) error {
 
     // - Pre Safety
     if sessionID == `` {
-		return &config.UserSafetyError{
+		return &config.FunctionCancelError{
 			Cause: `Empty id string`,
 			Message: `Given an empty id to work by`,
+            ElapsedTime: time.Now(),
+			Provider: `profiler.DeleteSchedule`,
 		}
 	}
 

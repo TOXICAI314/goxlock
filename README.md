@@ -179,8 +179,9 @@ Safety is the only thing that `goxlock` targets . No password or secret is revea
 
     Same Windows user malware during active DPAPI session | ⚠️ Limited
 
-    Kernel-level attacker |             ❌
+    Kernel-level attacker |             ❌ (sessions)
 
+- Over all the data is never revealed on its base form and you will feel secure even in attacks.
 
 
 ## Scheduling
@@ -240,11 +241,13 @@ There are still some known limitations for this app which will be solced in the 
 3. Non UI interface
 ## Contribution
 
-Here will be the name of the contributors.
+Thanks to everyone who has contributed to GoXLock ❤️
 
-1. TOXICAI314 (self)
+    Name            |          Badge
+    TOXICAI314              (🌿 Owner)
 
-- Every Contributor is most welcomed by me <happy_emoji>.
+- Every Contributor is most welcomed by me 😁.
+- For contributing to the project you can see -> [Contributing](CONTRIBUTING.md)
 
 ## Licence
 
@@ -291,6 +294,9 @@ v1.1 - The UI update
 4. Rich , colorful and structured base output
 4. Logic fixes (always)
 ```
+
+To see the Changelogs go here -> [Changelogs](CHANGELOG.md)
+
 ## Promises
 
 TOXICAI314 promises that:

@@ -1,0 +1,86 @@
+package header
+
+import (
+	"fmt"
+	"goxlock/config"
+	corefns "goxlock/core-fns"
+	"os"
+	"path/filepath"
+	"time"
+)
+
+// - Header
+// Gives the raw header of the `g-lock` file
+func Header(file string) (*config.Header,error) {
+	// - Pre Safety
+	if ext := filepath.Ext(file);ext != config.LockExt {
+		return nil,&config.FunctionFailError{
+			Cause: `Unwanted extension`,
+			Message: fmt.Sprintf(`Wanted - %s ; Given - %s`,config.LockExt,ext),
+			ElapsedTime: time.Now(),
+			Provider: `unlocker.Header`,
+		}
+	}
+
+	data,err := os.ReadFile(file)
+	if err != nil {
+		return nil,&config.FunctionFailError{
+			Cause: err.Error(),
+			Message: fmt.Sprintf(`Cannot read from the file : %s`,file),
+			ElapsedTime: time.Now(),
+			Provider: `unlocker.VerifyUnlock`,
+		}
+	}
+
+	header,_,err := config.ReadHeaderAndRest(data)
+	if err != nil {
+		return nil,err
+	}
+
+	return header,nil
+}
+
+// - GetUnlockedData 
+// will verify the unlocked file and will give the data of the file that is needed
+func GetUnlockedData(cfg *config.Config, rawData []byte) ([]byte, error) {
+	// - Pre Safety
+	switch {
+	case cfg == nil: 
+		return nil,&config.FunctionCancelError{
+			Cause: `Nil pointer dereference`,
+			Message: `A nil pointer of passed instead of a config pointer`,
+			ElapsedTime: time.Now(),
+			Provider: `unlocker.GetUnlockedData`,
+		}
+	case rawData == nil :
+		return nil,&config.FunctionCancelError{
+			Cause: `Nil pointer dereference`,
+			Message: `A nil pointer of passed instead of a raw data pointer`,
+			ElapsedTime: time.Now(),
+			Provider: `unlocker.GetUnlockedData`,
+		}
+	}
+	
+	header, encodeddata, err := config.ReadHeaderAndRest(rawData)
+	if err != nil  {
+		return nil,err
+	}
+
+	err = config.ValidateHeader(header)
+	if err != nil {
+		return nil, err
+	}
+
+	var sec *config.SharedEncryptionData = &config.SharedEncryptionData{
+		Salt:          header.Salt[:],
+		Nonce:         header.Nonce[:],
+		EncryptedData: encodeddata,
+	}
+
+	plaindata, err := corefns.Decrypt(sec, cfg)
+	if err != nil {
+		return nil,err
+	}
+
+	return plaindata, nil
+}

@@ -9,15 +9,18 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 // - Zip
 // commit zip onto the given folder but preserving the tree structure
 func Zip(cfg *config.Config) error {
 	if cfg == nil {
-		return &config.UserSafetyError{
+		return &config.FunctionCancelError{
 			Cause: `Nil pointer dereference`,
 			Message: `A nil pointer of passed instead of a config pointer`,
+			ElapsedTime: time.Now(),
+			Provider: `corefns.Zip`,
 		}
 	}
 	
@@ -26,25 +29,22 @@ func Zip(cfg *config.Config) error {
 
 	// - Pre Safety 
 	if _,err := os.Stat(*folder);err != nil {
-		return &config.UserSafetyError{
+		return &config.FunctionFailError{
 			Cause: err.Error(),
 			Message: fmt.Sprintf(`The folder given %s is not a valid path`,err),
+			ElapsedTime: time.Now(),
+			Provider: `corefns.Zip`,
 		}
 	}
 
 	// - Zipping
 	zipFile,err := os.OpenFile(*zipName,os.O_CREATE|os.O_RDWR,0700)
 	if err != nil {
-		return &config.ZipError{
+		return &config.FunctionFailError{
 			Cause: err.Error(),
 			Message: `The file failed to zip due to internal errors`,
-			Fix: `
-			{
-			Make sure the file is not:
-			1. Already taken for another sensitive file
-			2. Currenly being used by another application 
-			}
-			`,
+			ElapsedTime: time.Now(),
+			Provider: `corefns.Zip`,
 		}
 	}
 	defer zipFile.Close()
@@ -58,9 +58,11 @@ func Zip(cfg *config.Config) error {
 		// Info : `return nil` for continuing the recursion even if something fails
 		// - For folder : `relPath` will handle the tree structuring
 		if err != nil {
-			err = &config.UserSafetyError{
+			err = &config.FunctionFailError{
 				Cause: err.Error(),
-				Message: `Defect in walk`,
+				Message: fmt.Sprintf(`Defect in walk by %s`,relPath),
+				ElapsedTime: time.Now(),
+				Provider: `corefns.Zip`,
 			}
 			fmt.Println(err.Error())
 			return nil
@@ -79,9 +81,11 @@ func Zip(cfg *config.Config) error {
 		}
 		header,err := zip.FileInfoHeader(info)
 		if err != nil {
-			err = &config.UserSafetyError{
+			err = &config.FunctionFailError{
 				Cause: err.Error(),
-				Message: `Defect in walk`,
+				Message: fmt.Sprintf(`Defect in walk by the unredalble info of %s`,relPath),
+				ElapsedTime: time.Now(),
+				Provider: `corefns.Zip`,
 			}
 			fmt.Println(err.Error())
 			return nil
@@ -90,18 +94,22 @@ func Zip(cfg *config.Config) error {
 
 		openFile,err := os.Open(path)
 		if err != nil {
-			err = &config.UserSafetyError{
+			err = &config.FunctionFailError{
 				Cause: err.Error(),
-				Message: `Defect in walk`,
+				Message: fmt.Sprintf(`Cannot open the file : %s`,path),
+				ElapsedTime: time.Now(),
+				Provider: `corefns.Zip`,
 			}
 			fmt.Println(err.Error())
 			return nil
 		}
 		w,err := zipWriter.CreateHeader(header)
 		if err != nil {
-			err = &config.UserSafetyError{
+			err = &config.FunctionFailError{
 				Cause: err.Error(),
-				Message: `Defect in walk`,
+				Message: fmt.Sprintf(`Cannot create the header for %s`,relPath),
+				ElapsedTime: time.Now(),
+				Provider: `corefns.Zip`,
 			}
 			fmt.Println(err.Error())
 			openFile.Close()
@@ -109,9 +117,11 @@ func Zip(cfg *config.Config) error {
 		}
 		_,err = io.Copy(w,openFile)
 		if err != nil {
-			err = &config.UserSafetyError{
+			err = &config.FunctionFailError{
 				Cause: err.Error(),
-				Message: `Defect in walk`,
+				Message: fmt.Sprintf(`Cannot copy the data from %s`,path),
+				ElapsedTime: time.Now(),
+				Provider: `corefns.Zip`,
 			}
 			fmt.Println(err.Error())
 			openFile.Close()
@@ -121,9 +131,11 @@ func Zip(cfg *config.Config) error {
 		return nil
 	})
 	if err != nil {
-		return &config.UserSafetyError{
+		return &config.FunctionFailError{
 			Cause: err.Error(),
 			Message : `Cannot zip the given folder structure`,
+			ElapsedTime: time.Now(),
+			Provider: `corefns.Zip`,
 		}
 	}
 
@@ -136,14 +148,18 @@ func Unzip(cfg *config.Config,data []byte) error {
 	// - Pre Saefety
 	switch {
 	case data == nil:
-		return &config.UserSafetyError{
+		return &config.FunctionCancelError{
 			Cause: `Nil pointer dereference`,
 			Message: `A nil pointer of passed instead of a data slice pointer`,
+			ElapsedTime: time.Now(),
+			Provider: `corefns.Unzip`,
 		}
 	case cfg == nil :
-		return &config.UserSafetyError{
+		return &config.FunctionCancelError{
 			Cause: `Nil pointer dereference`,
 			Message: `A nil pointer of passed instead of a config pointer`,
+			ElapsedTime: time.Now(),
+			Provider: `corefns.Unzip`,
 		}
 	}
 	// Info : This makes a new reader from the zip data provided
@@ -156,16 +172,11 @@ func Unzip(cfg *config.Config,data []byte) error {
 	// Info : Then this zipp data get fetched into the reader to read from 
 	reader, err := zip.NewReader(bytes.NewReader(data),int64(len(data)))
 	if err != nil {
-		return &config.UnzipError{
+		return &config.FunctionFailError{
 			Cause: err.Error(),
 			Message: `The file failed to unzip due to internal errors`,
-			Fix: `
-			{
-			Make sure the file is not:
-			1. Already taken for another sensitive file
-			2. Currenly being used by another application 
-			}
-			`,
+			ElapsedTime: time.Now(),
+			Provider: `corefns.Unzip`,
 		}
 	}
 
@@ -184,9 +195,11 @@ func Unzip(cfg *config.Config,data []byte) error {
 			0755,
 		)
 		if err != nil {
-			err = &config.UserSafetyError{
+			err = &config.FunctionFailError{
 				Cause: err.Error(),
-				Message: `Defect in walk`,
+				Message: fmt.Sprintf(`Cannot make directory for %s`,targetPath),
+				ElapsedTime: time.Now(),
+				Provider: `corefns.Unzip`,
 			}
 			fmt.Println(err.Error())
 			continue
@@ -194,9 +207,11 @@ func Unzip(cfg *config.Config,data []byte) error {
 
 		src, err := file.Open()
 		if err != nil {
-			err = &config.UserSafetyError{
+			err = &config.FunctionFailError{
 				Cause: err.Error(),
-				Message: `Defect in walk`,
+				Message: fmt.Sprintf(`Cannot open the file %s`,file.Name),
+				ElapsedTime: time.Now(),
+				Provider: `corefns.Unzip`,
 			}
 			fmt.Println(err.Error())
 			continue
@@ -209,9 +224,11 @@ func Unzip(cfg *config.Config,data []byte) error {
 		)
 		if err != nil {
 			src.Close()
-			err = &config.UserSafetyError{
+			err = &config.FunctionFailError{
 				Cause: err.Error(),
-				Message: `Defect in walk`,
+				Message: fmt.Sprintf(`Cannot open the file to write the data : %s`,targetPath),
+				ElapsedTime: time.Now(),
+				Provider: `corefns.Unzip`,
 			}
 			fmt.Println(err.Error())
 			continue
@@ -223,9 +240,11 @@ func Unzip(cfg *config.Config,data []byte) error {
 		src.Close()
 
 		if err != nil {
-			err = &config.UserSafetyError{
+			err = &config.FunctionFailError{
 				Cause: err.Error(),
-				Message: `Defect in walk`,
+				Message: fmt.Sprintf(`Cannot copy from the Source %s to the destination %s`,file.Name,targetPath),
+				ElapsedTime: time.Now(),
+				Provider: `corefns.Unzip`,
 			}
 			fmt.Println(err.Error())
 			continue

@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"time"
 )
 
-// - CreateHeader() 
+// - CreateHeader()
 // CreateHeader : makes a header based on the Shared Encrypted data
 func CreateHeader(end *SharedEncryptionData) *Header {
 
@@ -29,14 +30,18 @@ func CreateHeader(end *SharedEncryptionData) *Header {
 func CreatePacket(hd *Header,end *SharedEncryptionData) ([]byte,error) {
 	switch {
 	case hd == nil:
-		return nil,&UserSafetyError{
+		return nil,&FunctionCancelError{
 			Cause: `Nil pointer reference`,
-			Message: `The given header pointer is pointing to nill`,
+			Message: `The given header pointer is pointing to nil`,
+			Provider: `config.CreatePacket`,
+			ElapsedTime: time.Now(),
 		}
 	case end == nil:
-		return nil,&UserSafetyError{
-			Cause: `Nil pointer dereference`,
-			Message: `A nil pointer of passed instead of a config pointer`,
+		return nil,&FunctionCancelError{
+			Cause: `Nil pointer reference`,
+			Message: `The given config pointer is pointing to nil`,
+			Provider: `config.CreatePacket`,
+			ElapsedTime: time.Now(),
 		}
 	}
 
@@ -53,13 +58,15 @@ func CreatePacket(hd *Header,end *SharedEncryptionData) ([]byte,error) {
 	return packet,nil
 }
 
-// - ReadHeader() 
+// - ReadHeader
 // ReadHeader : Reads the valid `glock` header
 func ReadHeaderAndRest(data []byte) (*Header,[]byte,error) {
 	if data == nil {
-		return nil,nil,&UserSafetyError{
-			Cause: `Nil pointer or empty data reference`,
-			Message: `The given data slice cannot give any usefull thing to read header`,
+		return nil,nil,&FunctionFailError{
+			Cause: `Nil pointer reference`,
+			Message: `The given data pointer is pointing to nil`,
+			Provider: `config.ReadHeaderAndRest`,
+			ElapsedTime: time.Now(),
 		}
 	}
 
@@ -69,25 +76,45 @@ func ReadHeaderAndRest(data []byte) (*Header,[]byte,error) {
 	name := make([]byte,7)
 	_,err := io.ReadFull(mainbuffer,name)
 	if err != nil {
-		return nil,nil,err
+		return nil,nil,&FunctionFailError{
+			Cause: err.Error(),
+			Message: `Cannot read from the main buffer to the name storing buffer`,
+			ElapsedTime: time.Now(),
+			Provider: `config.ReadHeaderAndRest`,
+		}
 	}
 
 	version := make([]byte,4)
 	_,err = io.ReadFull(mainbuffer,version)
 	if err != nil {
-		return nil,nil,err
+		return nil,nil,&FunctionFailError{
+			Cause: err.Error(),
+			Message: `Cannot read from the main buffer to the version storing buffer`,
+			ElapsedTime: time.Now(),
+			Provider: `config.ReadHeaderAndRest`,
+		}
 	}
 
 	salt := make([]byte,16)
 	_,err = io.ReadFull(mainbuffer,salt)
 	if err != nil {
-		return nil,nil,err
+		return nil,nil,&FunctionFailError{
+			Cause: err.Error(),
+			Message: `Cannot read from the main buffer to the salt storing buffer`,
+			ElapsedTime: time.Now(),
+			Provider: `config.ReadHeaderAndRest`,
+		}
 	}
 
 	nonce := make([]byte,12)
 	_,err = io.ReadFull(mainbuffer,nonce)
 	if err != nil {
-		return nil,nil,err
+		return nil,nil,&FunctionFailError{
+			Cause: err.Error(),
+			Message: `Cannot read from the main buffer to the nonce storing buffer`,
+			ElapsedTime: time.Now(),
+			Provider: `config.ReadHeaderAndRest`,
+		}
 	}
 
 	return &Header{
@@ -104,19 +131,11 @@ func ValidateHeader(hd *Header) error {
 	// - Name 
 	name := string(hd.Magic[:])
 	if name != Name {
-		return &DecryptionError{
+		return &FunctionCancelError{
 			Cause: `Invalid Header Naming`,
 			Message: fmt.Sprintf(`Naming of the '%s' file is not as intented`,ZipExt),
-			Fix: fmt.Sprintf(`Make sure that the file is of current version
-			Provided ->
-			{
-			name : %s
-			}
-			Needed ->
-			{
-			name : %s
-			}
-			`,name,Name),
+			ElapsedTime: time.Now(),
+			Provider: `config.ValidateHeader`,
 		}
 	}
 
@@ -124,10 +143,11 @@ func ValidateHeader(hd *Header) error {
 	// Info : must be a valid version number to actually run
 	v := math.Float32frombits(binary.LittleEndian.Uint32(hd.Version[:]))
 	if v < 1.0 {
-		return &DecryptionError{
+		return &FunctionCancelError{
 			Cause: `Invalid Version Number`,
 			Message: fmt.Sprintf(`Version is not whats intended : %.2f != (>= 1.0)`,v),
-			Fix: `Download the Best current version from my github 'TOXICAI314'`,
+			ElapsedTime: time.Now(),
+			Provider: `config.ValidateHeader`,
 		}
 	}
 

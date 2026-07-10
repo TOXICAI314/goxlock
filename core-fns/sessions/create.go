@@ -7,6 +7,7 @@ import (
 	"goxlock/core-fns/mutex"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 // - CreateSession
@@ -15,49 +16,61 @@ func (s *Session) CreateSession() error {
 
 	// - Pre Safety Run 
 	if !filepath.IsAbs(Sessionfolder) {
-		return &config.UserSafetyError{
+		return &config.FunctionCancelError{
 			Cause:   `CWD session path`,
 			Message: fmt.Sprintf(`Cannot get the AppdataRoaming path -> Got a cwd path %s`, Sessionfolder),
+			ElapsedTime: time.Now(),
+			Provider: `session.Session.CreateSession`,
 		}
 	}
 	err := os.MkdirAll(Sessionfolder, 0700)
 	if err != nil {
-		return &config.UserSafetyError{
+		return &config.FunctionFailError{
 			Cause:   err.Error(),
-			Message: `Making the sessions directory failed`,
+			Message: fmt.Sprintf( `Making the sessions directory failed : %s`,Sessionfolder),
+			ElapsedTime: time.Now(),
+			Provider: `session.Session.CreateSession`,
 		}
 	}
 
 	// - Making session file 
 	data, err := json.MarshalIndent(s, ``, ` `)
 	if err != nil {
-		return &config.UserSafetyError{
+		return &config.FunctionFailError{
 			Cause:   err.Error(),
-			Message: `Error in marsheling the Session , confirm its structure`,
+			Message: fmt.Sprintf(`Error in marsheling the Session , confirm its structure : %+v`,*s),
+			ElapsedTime: time.Now(),
+			Provider: `session.Session.CreateSession`,
 		}
 	}
 
 	filename := filepath.Join(Sessionfolder, s.Id+config.JsonExt)
 	mutex, exists, err := mutex.NewMutex(filename)
 	if err != nil {
-		return &config.UserSafetyError{
+		return &config.FunctionFailError{
 			Cause:   err.Error(),
-			Message: `An internal error has occured while Creating the Mutex for the given folder`,
+			Message: fmt.Sprintf(`An internal error has occured while Creating the Mutex for the given folder : %s`,filename),
+			ElapsedTime: time.Now(),
+			Provider: `session.Session.CreateSession`,
 		}
 	}
 	defer mutex.CloseMutex()
 	if exists {
-		return &config.UserSafetyError{
+		return &config.FunctionCancelError{
 			Cause:   `Mutex already exist`,
 			Message: fmt.Sprintf(`The mutex of the given folder %s is already there`, filename),
+			ElapsedTime: time.Now(),
+			Provider: `session.Session.CreateSession`,
 		}
 	}
 	// - Data Dump 
 	err = os.WriteFile(filename, data, 0700)
 	if err != nil {
-		return &config.UserSafetyError{
+		return &config.FunctionFailError{
 			Cause:   err.Error(),
-			Message: `Errors in writting into the file`,
+			Message: fmt.Sprintf(`Errors in writting into the file : %s`,filename),
+			ElapsedTime: time.Now(),
+			Provider: `session.Session.CreateSession`,
 		}
 	}
 

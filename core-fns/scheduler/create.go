@@ -14,9 +14,11 @@ import (
 func CreateShedule(sessionID string,instructions config.Instructions) error {
 	// - Pre Safety
 	if sessionID == `` {
-		return &config.UserSafetyError{
+		return &config.FunctionCancelError{
 			Cause: `Empty id string`,
 			Message: `Given an empty id to work by`,
+			ElapsedTime: time.Now(),
+			Provider: `profiler.CreateSchedule`,
 		}
 	}
 
@@ -25,9 +27,11 @@ func CreateShedule(sessionID string,instructions config.Instructions) error {
 	var err  error
 	exe, err = os.Executable()
 	if err != nil {
-		return &config.UserSafetyError{
+		return &config.FunctionFailError{
 			Cause:   err.Error(),
 			Message: `Cannot get the executable path of the current exe to schedule the task`,
+			ElapsedTime: time.Now(),
+			Provider: `profiler.CreateSchedule`,
 		}
 	}
 
@@ -66,9 +70,11 @@ func CreateShedule(sessionID string,instructions config.Instructions) error {
 	)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		return &config.UserSafetyError{
+		return &config.FunctionFailError{
 			Cause:   err.Error(),
 			Message: fmt.Sprintf(`Error while scheduling the task to the sctask : %s`, string(out)),
+			ElapsedTime: time.Now(),
+			Provider: `profiler.CreateSchedule`,
 		}
 	}
 

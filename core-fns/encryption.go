@@ -9,6 +9,8 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"time"
+
 	"golang.org/x/crypto/argon2"
 )
 
@@ -16,9 +18,11 @@ import (
 // EncryptFileWithHeader : Encrypts the file info the undetectable form for user privacy that can only be breached by giving correct password
 func EncryptFileWithHeader(cfg *config.Config) error {
 	if cfg == nil {
-		return &config.UserSafetyError{
+		return &config.FunctionCancelError{
 			Cause: `Nil pointer reference`,
 			Message: `A nil pointer to the configuration has been passed`,
+			ElapsedTime: time.Now(),
+			Provider: `corefns.EncryptFileWithHeader`,
 		}
 	}
 	
@@ -26,30 +30,21 @@ func EncryptFileWithHeader(cfg *config.Config) error {
 
 	openfile, err := os.OpenFile(*file, os.O_RDWR, 0700)
 	if err != nil {
-		return &config.EncryptionError{
+		return &config.FunctionFailError{
 			Cause:   err.Error(),
 			Message: fmt.Sprintf("Cannot open given file : %s", filepath.Base(*file)),
-			Fix: `
-			Make sure that the given file is not:
-			1. Deleted
-			2. Locked by a system mutex
-			3. Opened by too many application
-			`,
+			ElapsedTime: time.Now(),
+			Provider: `corefns.EncryptFileWithHeader`,
 		}
 	}
 	defer openfile.Close()
 	data, err := io.ReadAll(openfile)
 	if err != nil {
-		return &config.EncryptionError{
+		return &config.FunctionFailError{
 			Cause:   err.Error(),
 			Message: fmt.Sprintf("Cannot read data from the given file : %s", filepath.Base(*file)),
-			Fix: `
-			Make sure that the given file is not:
-			1. Deleted
-			2. Being written over
-			3. Locked by a system mutex
-			4. Too much reads
-			`,
+			ElapsedTime: time.Now(),
+			Provider: `corefns.EncryptFileWithHeader`,
 		}
 	}
 
@@ -76,14 +71,18 @@ func Encrypt(data []byte, cfg *config.Config) (*config.SharedEncryptionData, err
 	// - Pre Safety
 	switch {
 	case cfg == nil:
-		return nil,&config.UserSafetyError{
+		return nil,&config.FunctionCancelError{
 			Cause: `Nil pointer reference`,
 			Message: `A nil pointer to the configuration has been passed`,
+			ElapsedTime: time.Now(),
+			Provider: `corefns.Encrypt`,
 		}
 	case data == nil :
-		return nil,&config.UserSafetyError{
+		return nil,&config.FunctionCancelError{
 			Cause: `Nil pointer reference`,
 			Message: `A nil pointer to the byte data has been passed`,
+			ElapsedTime: time.Now(),
+			Provider: `corefns.Encrypt`,
 		}
 	}
 	// Info :
@@ -92,9 +91,11 @@ func Encrypt(data []byte, cfg *config.Config) (*config.SharedEncryptionData, err
 	salt := make([]byte, 16)
 	_, err := rand.Read(salt)
 	if err != nil {
-		return nil, &config.UserSafetyError{
+		return nil, &config.FunctionFailError{
 			Cause: err.Error(),
 			Message: `Cannot read random into the salt`,
+			ElapsedTime: time.Now(),
+			Provider: `corefns.Encrypt`,
 		}
 	}
 
@@ -112,9 +113,11 @@ func Encrypt(data []byte, cfg *config.Config) (*config.SharedEncryptionData, err
 	// block -> a new cipher for a secure encryption
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return nil, &config.UserSafetyError{
+		return nil, &config.FunctionFailError{
 			Cause: err.Error(),
 			Message: `Cannot create a new cipher`,
+			ElapsedTime: time.Now(),
+			Provider: `corefns.Encrypt`,
 		}
 	}
 
@@ -123,9 +126,11 @@ func Encrypt(data []byte, cfg *config.Config) (*config.SharedEncryptionData, err
 	// 2. Alternation in the original data
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return nil,  &config.UserSafetyError{
+		return nil,  &config.FunctionFailError{
 			Cause: err.Error(),
 			Message: `Cannot create a new gcm`,
+			ElapsedTime: time.Now(),
+			Provider: `corefns.Encrypt`,
 		}
 	}
 
@@ -134,9 +139,11 @@ func Encrypt(data []byte, cfg *config.Config) (*config.SharedEncryptionData, err
 	nonce := make([]byte, 12)
 	_, err = rand.Read(nonce)
 	if err != nil {
-		return nil,  &config.UserSafetyError{
+		return nil,  &config.FunctionFailError{
 			Cause: err.Error(),
 			Message: `Cannot create a new nonce`,
+			ElapsedTime: time.Now(),
+			Provider: `corefns.Encrypt`,
 		}
 	}
 
@@ -157,14 +164,18 @@ func Decrypt(sec *config.SharedEncryptionData,cfg *config.Config) ([]byte,error)
 	// Pre Safety 
 	switch {
 	case cfg == nil:
-		return nil,&config.UserSafetyError{
+		return nil,&config.FunctionCancelError{
 			Cause: `Nil pointer reference`,
 			Message: `A nil pointer to the configuration has been passed`,
+			ElapsedTime: time.Now(),
+			Provider: `corefns.Decrypt`,
 		}
 	case sec == nil :
-		return nil,&config.UserSafetyError{
+		return nil,&config.FunctionCancelError{
 			Cause: `Nil pointer reference`,
 			Message: `A nil pointer to the Shared Encryption data has been passed`,
+			ElapsedTime: time.Now(),
+			Provider: `corefns.Decrypt`,
 		}
 	}
 
@@ -180,25 +191,31 @@ func Decrypt(sec *config.SharedEncryptionData,cfg *config.Config) ([]byte,error)
 	// - AES Gcm open 
 	block,err := aes.NewCipher(key)
 	if err != nil {
-		return nil,&config.UserSafetyError{
+		return nil,&config.FunctionFailError{
 			Cause: err.Error(),
 			Message: `Cannot create a new cipher`,
+			ElapsedTime: time.Now(),
+			Provider: `corefns.Decrypt`,
 		}
 	}
 
 	gcm,err := cipher.NewGCM(block)
 	if err != nil {
-		return nil,&config.UserSafetyError{
+		return nil,&config.FunctionFailError{
 			Cause: err.Error(),
 			Message: `Cannot create a new gcm`,
+			ElapsedTime: time.Now(),
+			Provider: `corefns.Decrypt`,
 		}
 	}
 
 	plaindata,err := gcm.Open(nil,sec.Nonce,sec.EncryptedData,nil)
 	if err != nil {
-		return nil,&config.UserSafetyError{
+		return nil,&config.FunctionFailError{
 			Cause: err.Error(),
 			Message: `Cannot make decrypt the data because of the given reason`,
+			ElapsedTime: time.Now(),
+			Provider: `corefns.Decrypt`,
 		}
 	} 
 

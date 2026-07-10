@@ -15,6 +15,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// - Helpful Variables
+// These varibales will only be used in cmd/root.go for assists
+var (
+	provider 	string  	= 		`cmd.root`
+)
+
 // - Binded Variables
 // Info : Binded variable are binded towards a flag which dumps its value to the variable
 var (
@@ -42,15 +48,15 @@ var (
 	// Info : These variabeles are to setup actions for the config
 
 	// lock -> Triggers lock action
-	lock bool
+	lock 			bool
 	// unlock -> Triggers unlock action
-	unlock bool
+	unlock 			bool
 	// changePassword -> Triggers password changing action
-	changePassword bool
+	changePassword 	bool
 	// verifyPassword -> Triggers verify password action
-	verifyPassword bool
+	verifyPassword 	bool
 	// header -> Triggers header seeking mechanism
-	header bool
+	header 			bool
 
 	// - Instruction Section
 	// Info : These variables are for the instructions that comes with config
@@ -77,28 +83,34 @@ var (
 
 	// - Log
 	// Deals with the argumenst passe for the loging section
-	logdate string
+	logdate 	string
 
 	// - Updater
 	// Deals with update and stuff
 	checkupdate bool
+
+	// - TUI
+	// The triggering point of tui
+	serve_tui 		bool
 )
 
 // - One time runners
 // These will run at the starting of the code if given and will return immediately without causeing any action
 var (
 	// doctorcheck -> fires the checkup for the perfect working of the application on your device
-	doctorcheck bool
+	doctorcheck 		bool
 	// readlog -> tells to read the log from the given timed log file
-	readlog bool
+	readlog 			bool
 	// makeprofile -> fires the running of the profile making mechanism
-	makeprofile bool
+	makeprofile 		bool
 	// deleteprofile -> deletes the profile that is named
-	deleteprofile bool
+	deleteprofile	 	bool
 	// updateprofile -> updates the feilds of the profile user wanted to use
-	updateprofile bool
+	updateprofile 		bool
 	// useprofile -> Intead of returning -> It let the command run further
-	useprofile bool
+	useprofile 			bool
+	// where -> Just gives the current working place to the caller
+	where 				bool
 )
 
 // GlobalCfg : For all the user request passed into sigularity
@@ -112,8 +124,8 @@ var rootcmd *cobra.Command = &cobra.Command{
 	// These will be used to run the main command and get the version info
 	// Any change in `Use` field -> Different name for running the command
 	Use:     config.Name,
-	Long: 	config.Banner,
-	Version: fmt.Sprintf(`%v`, config.Version),
+	Long: 	 config.Banner,
+	Version: utils.GetBasicVersionDetails(fmt.Sprintf(`%.1f`,config.Version)),
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		// - PreRunner
 		// This will run in the starting doing the objective that is assigned to it or left by previous work
@@ -121,9 +133,11 @@ var rootcmd *cobra.Command = &cobra.Command{
 		// Info : This will clear the cache that is stored into the temporary folder
 		err := utils.ClearAllTempFolderJunk(config.Name)
 		if err != nil {
-			fmt.Println(&config.UserSafetyError{
+			fmt.Println(&config.FunctionFailError{
 				Cause:   err.Error(),
 				Message: fmt.Sprintf(`Cannot make clear up the previous temp folder junk made by %s`, config.Name),
+				ElapsedTime: time.Now(),
+				Provider: `utils.ClearAllTempFolderJunk`,
 			})
 		}
 		return nil
@@ -136,10 +150,22 @@ var rootcmd *cobra.Command = &cobra.Command{
 		switch {
 		case checkupdate:
 			return updater.CheckForUpdate()
+		case where:
+			path,err := utils.Where()
+			if err != nil {
+				return &config.FunctionFailError{
+					Cause: err.Error(),
+					Message: `The underlying function cant find the executable path of the current running program`,
+					ElapsedTime: time.Now(),
+					Provider: `utils.Where`,
+				}
+			}
+			fmt.Printf(`Current Woking path : %s`,path)
+			return nil
 		// This will check for any doctor check that is needed (NOTE : Doctor only checks for functionality that the application wants not the functions)
 		case doctorcheck:
 			dc := &doctor.Doctor{}
-			return dc.Start()
+			return dc.Start() 
 		case readlog:
 			logger, err := logger.ReadLogFile(logdate)
 			if err != nil {
@@ -161,16 +187,20 @@ var rootcmd *cobra.Command = &cobra.Command{
 			if timeoutS != `` {
 				timeout, err = time.ParseDuration(timeoutS)
 				if err != nil {
-					return &config.UserSafetyError{
+					return &config.FunctionCancelError{
 						Cause:   err.Error(),
-						Message: `Cannot parse the given time , Provide a valid time layout`,
+						Message: fmt.Sprintf(`Cannot parse the given time : %s`,timeoutS),
+						ElapsedTime: time.Now(),
+						Provider: `time.ParseDuration`,
 					}
 				}
 			}
 			if OutputName == `` {
-				return &config.UserSafetyError{
+				return &config.FunctionCancelError{
 					Cause:   `Invalid output name`,
 					Message: `Provide a Valid name to be taken for the profile`,
+					Provider: provider,
+					ElapsedTime: time.Now(),
 				}
 			}
 			pf := &profiler.Profiler{
@@ -219,9 +249,11 @@ var rootcmd *cobra.Command = &cobra.Command{
 			if timeoutS != `` {
 				instr.Timeout, err = time.ParseDuration(timeoutS)
 				if err != nil {
-					return &config.UserSafetyError{
+					return &config.FunctionFailError{
 						Cause:   err.Error(),
 						Message: `Bad time input which cant be parsed`,
+						Provider: `time.ParseDuration`,
+						ElapsedTime: time.Now(),
 					}
 				}
 			}
@@ -252,16 +284,20 @@ var rootcmd *cobra.Command = &cobra.Command{
 		switch {
 		case verifyPassword, changePassword, lock, unlock, header:
 			if FolderName == `` {
-				return &config.UserSafetyError{
+				return &config.FunctionCancelError{
 					Cause:   `Together operations cant be neglected -> 'lock|unlock|changePassword|verifyPassword|header' && 'folder'`,
 					Message: `Provide Sufficient details for verifying`,
+					ElapsedTime: time.Now(),
+					Provider: provider,
 				}
 			}
 		case relock:
 			if sessionId == `` {
-				return &config.UserSafetyError{
+				return &config.FunctionCancelError{
 					Cause:   `Together operations are neglected -> 'relock' && 'sessionID'`,
 					Message: `Together coming operations relocking`,
+					ElapsedTime: time.Now(),
+					Provider: provider,
 				}
 			}
 		}
@@ -273,35 +309,38 @@ var rootcmd *cobra.Command = &cobra.Command{
 
 		var Timeout time.Duration
 		var err error
+		var ans bool
 		if timeoutS != `` {
+			if !unsafe {
+				// - Confirmation
+				// Info : As info stores the os level enctypted password directly to the disk
+				// If any attacker gets in as the user , they can decrypt the file while the `session.json` file is there
+				ans = utils.GetYesORNo(
+					fmt.Sprintf(`
+				SECURITY ALLERT:
+				
+				- By using 'time-out' you are allowing the app to store the encrypted data into the disk , which may contain your password.
+				- Password is not in raw string or bytes but is encrypted.
+				- But for the duration of %s that file will be stored into your disk and is vulnarable from any attacker if they get the os level id as you.
 
-			// - Confirmation
-			// Info : As info stores the os level enctypted password directly to the disk
-			// If any attacker gets in as the user , they can decrypt the file while the `session.json` file is there
-			ans := utils.GetYesORNo(
-				fmt.Sprintf(`
-			SECURITY ALLERT:
-			
-			- By using 'time-out' you are allowing the app to store the encrypted data into the disk , which may contain your password.
-			- Password is not in raw string or bytes but is encrypted.
-			- But for the duration of %s that file will be stored into your disk and is vulnarable from any attacker if they get the os level id as you.
 
+				Better lock your device so that no one from your side can decrypt your data for that time period.
+				As once the scheduler has done working , the scheduled file will be auto deleted.
 
-			Better lock your device so that no one from your side can decrypt your data for that time period.
-			As once the scheduler has done working , the scheduled file will be auto deleted.
-
-			Are you sure you wanna schedule this task OR Just do the action without any timeout ? (y/n) : `, timeoutS),
-			)
-
-			if ans {
+				Are you sure you wanna schedule this task OR Just do the action without any timeout ? (y/n) : `, timeoutS),
+				)
+			}
+			if !ans {
 				Timeout, err = time.ParseDuration(timeoutS)
 				if err != nil {
-					return &config.UserSafetyError{
+					return &config.FunctionFailError{
 						Cause:   err.Error(),
-						Message: fmt.Sprintf(`Given time : %s cannot be parsed`, timeoutS),
+						Message: `Bad time input which cant be parsed`,
+						Provider: `time.ParseDuration`,
+						ElapsedTime: time.Now(),
 					}
 				}
-			}
+			}	
 		}
 		var action int
 
@@ -317,7 +356,7 @@ var rootcmd *cobra.Command = &cobra.Command{
 			}
 		}
 		if actioncount > 1 {
-			return &config.UserSafetyError{
+			return &config.FunctionCancelError{
 				Cause: `More action than one`,
 				Message: `Your current action tried to do more than one action
 				Provided actions :
@@ -328,6 +367,8 @@ var rootcmd *cobra.Command = &cobra.Command{
 				- Verify Password
 				- Header
 				`,
+				Provider: provider,
+				ElapsedTime: time.Now(),
 			}
 		}
 
@@ -359,45 +400,57 @@ var rootcmd *cobra.Command = &cobra.Command{
 		case config.LockFolder:
 			Password, err = utils.ConfirmSecretPassword(`Enter your password: `)
 			if err != nil {
-				return &config.UserSafetyError{
+				return &config.FunctionFailError{
 					Cause:   err.Error(),
-					Message: `The above Error message provides correct reason why it happened`,
+					Message: `There is an internal error while recording the password`,
+					ElapsedTime: time.Now(),
+					Provider: provider,
 				}
 			}
 			if Password == `` {
-				return &config.UserSafetyError{
+				return &config.FunctionCancelError{
 					Cause:   `Empty Password`,
 					Message: `Cannot Continue with an empty password`,
+					ElapsedTime: time.Now(),
+					Provider: provider,
 				}
 			}
 		case config.UnlockFolder:
 			Password, err = utils.SecretInput(`Enter your password: `)
 			if err != nil {
-				return &config.UserSafetyError{
+				return &config.FunctionFailError{
 					Cause:   err.Error(),
 					Message: `Cannot create a secure Path to read the password ; Make sure you have opened the app in secure terminal`,
+					ElapsedTime: time.Now(),
+					Provider: provider,
 				}
 			}
 		case config.ChangePassword:
 			Password, err = utils.SecretInput(`Enter your initial passwrord: `)
 			if err != nil {
-				return &config.UserSafetyError{
+				return &config.FunctionFailError{
 					Cause:   err.Error(),
 					Message: `Cannot create a secure Path to read the password ; Make sure you have opened the app in secure terminal`,
+					ElapsedTime: time.Now(),
+					Provider: provider,
 				}
 			}
 
 			newPassword, err := utils.ConfirmSecretPassword(`Enter your new password: `)
 			if err != nil {
-				return &config.UserSafetyError{
+				return &config.FunctionFailError{
 					Cause:   err.Error(),
-					Message: `The above Error message provides correct reason why it happened`,
+					Message: `There is an internal error while recording the password`,
+					ElapsedTime: time.Now(),
+					Provider: provider,
 				}
 			}
 			if newPassword == `` {
-				return &config.UserSafetyError{
-					Cause:   err.Error(),
-					Message: `Cannot create a secure Path to read the password ; Make sure you have opened the app in secure terminal`,
+				return &config.FunctionCancelError{
+					Cause:   `Empty Password`,
+					Message: `Cannot Continue with an empty password`,
+					ElapsedTime: time.Now(),
+					Provider: provider,
 				}
 			}
 			Cfg.ChangePassword = config.ChangePasswordData{
@@ -406,9 +459,11 @@ var rootcmd *cobra.Command = &cobra.Command{
 		case config.VerifyPassword:
 			Password, err = utils.SecretInput(`Enter your password: `)
 			if err != nil {
-				return &config.UserSafetyError{
+				return &config.FunctionFailError{
 					Cause:   err.Error(),
 					Message: `Cannot create a secure Path to read the password ; Make sure you have opened the app in secure terminal`,
+					ElapsedTime: time.Now(),
+					Provider: provider,
 				}
 			}
 		}
@@ -452,7 +507,7 @@ func init() {
 	rootcmd.Flags().StringVar(&OutputName, `out`, ``, `Gives the custom name to the output folder`)
 	rootcmd.Flags().BoolVar(&unlock, `unlock`, false, `Unlocks the targetted folder`)
 	rootcmd.Flags().StringVar(&timeoutS, `time-out`, ``, `Shedule re encryption over a certain time (must give minute/hour/day timelimits )`)
-	rootcmd.Flags().BoolVar(&changePassword, `change-password`, false, `Chnages your current password`)
+	rootcmd.Flags().BoolVar(&changePassword, `change-password`, false, `Changes your current password`)
 	rootcmd.Flags().BoolVar(&verifyPassword, `verify-password`, false, `Verify your folder password without unlocking it`)
 	rootcmd.Flags().StringSliceVar(&exlude, `exclude`, []string{}, `Excludes given patterns`)
 	rootcmd.Flags().BoolVar(&loggerallowed, `log`, false, `Allow logger to log into the hardcoded files`)
@@ -460,6 +515,7 @@ func init() {
 	rootcmd.Flags().BoolVar(&stats, `stats`, false, `Use it to see the stats of your operation`)
 	rootcmd.Flags().BoolVar(&readlog, `read-log`, false, `Toggle the read log function`)
 	rootcmd.Flags().StringVar(&logdate, `log-date`, ``, `Gives the log date to instructor`)
+	rootcmd.Flags().BoolVar(&where,`where`,false,`Gives current working executable path`)
 
 	// - Profile
 	rootcmd.Flags().BoolVar(&makeprofile, `make-profile`, false, `Makes the profile of the user as per name`)

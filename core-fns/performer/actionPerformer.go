@@ -6,18 +6,21 @@ import (
 	"encoding/binary"
 	"fmt"
 	"goxlock/config"
+	"goxlock/core-fns/header"
 	"goxlock/core-fns/locker"
 	"goxlock/core-fns/logger"
 	passwordchanger "goxlock/core-fns/password-changer"
 	"goxlock/core-fns/relocker"
 	"goxlock/core-fns/unlocker"
+	"goxlock/core-fns/verify"
 	"goxlock/utils"
 	"math"
 	"os"
 	"strings"
+	"time"
 )
 
-// - Const 
+// - Const
 const (
 	// deleteuppercursordata -> The ANSII keyword that deletes the upper written line from the buffer of the writter
 	deleteuppercursordata string = "\033[A\033[K\033[A\033[K"
@@ -28,9 +31,11 @@ const (
 func PerformAction(cfg *config.Config) error {
 	// - Pre Safety 
 	if cfg == nil {
-		return &config.UserSafetyError{
+		return &config.FunctionCancelError{
 			Cause: `Nil pointer dereference`,
 			Message: `A nil pointer of passed instead of a config pointer`,
+			ElapsedTime: time.Now(),
+			Provider: `performer.PerformAction`,
 		}
 	} 
 
@@ -73,7 +78,7 @@ func PerformAction(cfg *config.Config) error {
 			}
 		}
 	case config.VerifyPassword:
-		err := unlocker.VerifyUnlock(cfg)
+		err := verify.VerifyUnlock(cfg)
 		if err == nil {
 			// Info : Here the err is not returned -> it is used for soft message
 			fmt.Println("Correct Password : Your given password is totally correct")
@@ -82,21 +87,21 @@ func PerformAction(cfg *config.Config) error {
 				        Reason : %s`,err.Error())
 		}
 	case config.HeaderCheck:
-		var header *config.Header
-		header,err = unlocker.Header(cfg.FolderName)
+		var header_x *config.Header
+		header_x,err = header.Header(cfg.FolderName)
 		if err != nil {
 			return err
 		}
-		salt := base64.StdEncoding.EncodeToString(header.Salt[:])
-		nonce := base64.StdEncoding.EncodeToString(header.Nonce[:])
-		version := math.Float32frombits(binary.LittleEndian.Uint32(header.Version[:]))
+		salt := base64.StdEncoding.EncodeToString(header_x.Salt[:])
+		nonce := base64.StdEncoding.EncodeToString(header_x.Nonce[:])
+		version := math.Float32frombits(binary.LittleEndian.Uint32(header_x.Version[:]))
 		fmt.Printf(
 			`
 			Name - %s
 			Version - %v
 			Salt (base64) - %s
 			Nonce (base64) - %s
-			`,string(header.Magic[:]),version,salt,nonce,
+			`,string(header_x.Magic[:]),version,salt,nonce,
 		)
 		return nil
 	default:
@@ -106,9 +111,11 @@ func PerformAction(cfg *config.Config) error {
 	defer func() {
 		// - Logger Entry
 		// Logger logs here to put the end results
-		var loggerx *logger.Logger
-		loggerx,_ = logger.Log(cfg,err)
-		loggerx.Write()
+		if cfg.InstructData.LoggerAllowed {
+			var loggerx *logger.Logger
+			loggerx,_ = logger.Log(cfg,err)
+			loggerx.Write()
+		}
 	}()
 
 	return err

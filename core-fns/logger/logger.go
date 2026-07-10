@@ -20,7 +20,6 @@ var (
 // - Logger
 // Logger is just a printer that allows printing the extras on the desired `*os.File`
 type Logger struct {
-	Allowed              bool
 	Place                string
 	CollectiveLoggerData LoggerData
 }
@@ -47,37 +46,42 @@ type ConfiguredConfigData struct {
 // - Write
 // Prints the data as normal but in the given destination and Permission
 func (lg *Logger) Write() error {
-	if !lg.Allowed {
-		return nil
-	}
 	// - Mutex
 	mutex, exists, err := mutex.NewMutex(lg.Place)
 	if err != nil {
-		return &config.UserSafetyError{
+		return &config.FunctionFailError{
 			Cause:   err.Error(),
-			Message: `An internal error has occured while Creating the Mutex for the given folder`,
+			Message: fmt.Sprintf(`An internal error has occured while Creating the Mutex for the given folder: %s`,lg.Place),
+			Provider: `logger.Logger.Write`,	
+			ElapsedTime:  time.Now(),
 		}
 	}
 	defer mutex.CloseMutex()
 	if exists {
-		return &config.UserSafetyError{
+		return &config.FunctionCancelError{
 			Cause:   `Mutex already exist`,
 			Message: fmt.Sprintf(`The mutex of the given folder %s is already there`, lg.Place),
+			Provider: `logger.Logger.Write`,	
+			ElapsedTime:  time.Now(),
 		}
 	}
 
 	data, err := json.MarshalIndent(lg.CollectiveLoggerData, ``, ` `)
 	if err != nil {
-		return &config.UserSafetyError{
+		return &config.FunctionFailError{
 			Cause:   err.Error(),
-			Message: `Cannot marshal the data into json format`,
+			Message: fmt.Sprintf(`Cannot marshal the data into json format for the data %+v`,lg.CollectiveLoggerData),
+			Provider: `logger.Logger.Write`,	
+			ElapsedTime:  time.Now(),
 		}
 	}
 	err = os.WriteFile(lg.Place, data, 0700)
 	if err != nil {
-		return &config.UserSafetyError{
+		return &config.FunctionFailError{
 			Cause:   err.Error(),
 			Message: fmt.Sprintf(`Cannot Write into the file specified : %s`, lg.Place),
+			Provider: `logger.Logger.Write`,	
+			ElapsedTime:  time.Now(),
 		}
 	}
 	return err
@@ -86,17 +90,16 @@ func (lg *Logger) Write() error {
 // - Read
 // It reads the data if the allowance is done
 func (lg *Logger) Read(buf *[]byte) error {
-	if lg.Allowed {
-		data, err := os.ReadFile(lg.Place)
-		if err != nil {
-			return &config.UserSafetyError{
-				Cause:   err.Error(),
-				Message: fmt.Sprintf(`Cannot Write into the file specified : %s`, lg.Place),
-			}
+	data, err := os.ReadFile(lg.Place)
+	if err != nil {
+		return &config.FunctionFailError{
+			Cause:   err.Error(),
+			Message: fmt.Sprintf(`Cannot Write into the file specified : %s`, lg.Place),
+			Provider: `logger.Logger.Read`,	
+			ElapsedTime:  time.Now(),
 		}
-		*buf = data
-		return nil
 	}
+	*buf = data
 	return nil
 }
 
@@ -104,25 +107,30 @@ func (lg *Logger) Read(buf *[]byte) error {
 // The main function which writes into the goxlock appdata folder for log
 func Log(cfg *config.Config, errEncountered error) (*Logger, error) {
 	if cfg == nil {
-		return nil,&config.UserSafetyError{
+		return nil,&config.FunctionCancelError{
 			Cause: `Nil pointer dereference`,
 			Message: `A nil pointer of passed instead of a config pointer`,
+			ElapsedTime: time.Now(),
+			Provider: `logger.Log`,
 		}
 	} 
 
 	// - Pre Safety
 	if !filepath.IsAbs(LoggerApddataPath) {
-		return nil, &config.UserSafetyError{
+		return nil, &config.FunctionCancelError{
 			Cause:   `Cwd Folder Detected`,
-			Message: `The folder path is a local path not absolute path`,
+			Message: fmt.Sprintf(`The folder path is a local path not absolute path : %s`,LoggerApddataPath),
+			ElapsedTime: time.Now(),
+			Provider: `logger.Log`,
 		}
-
 	}
 	errx := os.MkdirAll(LoggerApddataPath, 0700)
 	if errx != nil {
-		return nil, &config.UserSafetyError{
+		return nil, &config.FunctionFailError{
 			Cause:   errx.Error(),
-			Message: `Cannot Create the folder that is needed to store the logs`,
+			Message: fmt.Sprintf(`Cannot Create the folder that is needed to store the logs : %s`,LoggerApddataPath),
+			ElapsedTime: time.Now(),
+			Provider: `logger.Log`,
 		}
 	}
 
@@ -132,9 +140,11 @@ func Log(cfg *config.Config, errEncountered error) (*Logger, error) {
 
 	file,errx := os.OpenFile(accessingFile,os.O_CREATE|os.O_RDWR,0700)
 	if errx != nil {
-		return nil,&config.UserSafetyError{
+		return nil,&config.FunctionFailError{
 			Cause: errx.Error(),
-			Message: `Cannot open the file for the reading of the data`,
+			Message: fmt.Sprintf(`Cannot open the file for the reading of the data : %s`,accessingFile),
+			ElapsedTime: time.Now(),
+			Provider: `logger.Log`,
 		}
 	}
 	file.Close()
@@ -158,7 +168,6 @@ func Log(cfg *config.Config, errEncountered error) (*Logger, error) {
 	}
 	previouslogs.Logs = append(previouslogs.Logs,configureddata)
 	return &Logger{
-		Allowed				:              	cfg.InstructData.LoggerAllowed,
 		Place				:				accessingFile,
 		CollectiveLoggerData: 				previouslogs ,
 	}, nil
@@ -169,33 +178,41 @@ func Log(cfg *config.Config, errEncountered error) (*Logger, error) {
 func ReadLogFile(formattedTime string) (*Logger,error) {
 	// - Pre Safety
 	if !filepath.IsAbs(LoggerApddataPath) {
-		return nil, &config.UserSafetyError{
+		return nil, &config.FunctionCancelError{
 			Cause:   `Cwd Folder Detected`,
-			Message: `The folder path is a local path not absolute path`,
+			Message: fmt.Sprintf(`The folder path is a local path not absolute path : %s`,LoggerApddataPath),
+			ElapsedTime: time.Now(),
+			Provider: `logger.ReadLogFile`,
 		}
 
 	}
 	err := os.MkdirAll(LoggerApddataPath, 0700)
 	if err != nil {
-		return nil, &config.UserSafetyError{
+		return nil, &config.FunctionFailError{
 			Cause:   err.Error(),
-			Message: `Cannot Create the folder that is needed to store the logs`,
+			Message: fmt.Sprintf(`Cannot Create the folder that is needed to store the logs : %s`,LoggerApddataPath),
+			ElapsedTime: time.Now(),
+			Provider: `logger.ReadLogFile`,
 		}
 	}
 	// Info : If the time is not given then current date will be used
 	if formattedTime == `` {
-		return nil,&config.UserSafetyError{
+		return nil,&config.FunctionCancelError{
 			Cause: `Invalid formatting time`,
 			Message: `The time given by the user is invalid to use -> Empty string`,
+			ElapsedTime: time.Now(),
+			Provider: `logger.ReadLogFile`,
 		}
 	}
 
 	accessingFile := filepath.Join(LoggerApddataPath, fmt.Sprintf(Loggerpattern, formattedTime))
 	data,err := os.ReadFile(accessingFile)
 	if err != nil {
-		return nil,&config.UserSafetyError{
+		return nil,&config.FunctionFailError{
 			Cause: err.Error(),
-			Message: `Cannot read from the log file and fetch the logged data`,
+			Message: fmt.Sprintf(`Cannot read from the log file and fetch the logged data : %s`,accessingFile),
+			ElapsedTime: time.Now(),
+			Provider: `logger.ReadLogFile`,
 		}
 	} 
 
@@ -203,13 +220,14 @@ func ReadLogFile(formattedTime string) (*Logger,error) {
 	err = json.Unmarshal(data,&previouslogs)
 	// Info : Here the error will be counted as there is no restriction of the file to be made or to be fresh
 	if err != nil {
-		return nil,&config.UserSafetyError{
+		return nil,&config.FunctionFailError{
 			Cause: err.Error(),
-			Message: `The data cannot be unmarshlled into a formatted type`,
+			Message: fmt.Sprintf(`The data cannot be unmarshlled into a formatted type : %+v`,data),
+			ElapsedTime: time.Now(),
+			Provider: `logger.ReadLogFile`,
 		}
 	}
 	return &Logger{
-		Allowed: true,
 		Place: accessingFile,
 		CollectiveLoggerData: previouslogs,
 	},nil

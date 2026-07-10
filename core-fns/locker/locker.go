@@ -18,24 +18,30 @@ import (
 func Locker(cfg *config.Config) error {
 
 	if cfg == nil {
-		return &config.UserSafetyError{
+		return &config.FunctionCancelError{
 			Cause: `Nil pointer dereference`,
 			Message: `A nil pointer of passed instead of a config pointer`,
+			Provider: `locker.Locker`,
+			ElapsedTime: time.Now(),
 		}
 	} 
 	// - Pre Safety 
 	stats, err := os.Stat(cfg.FolderName)
 	if err == nil {
 		if !stats.IsDir() {
-			return &config.UserSafetyError{
+			return &config.FunctionCancelError{
 				Cause: `Non Folder file`,
 				Message: fmt.Sprintf("Cannot Walk over a file like structure : %s", cfg.FolderName),
+				Provider: `locker.Locker`,
+				ElapsedTime: time.Now(),
 			}
 		}
 	} else {
-		return &config.UserSafetyError{
+		return &config.FunctionCancelError{
 			Cause: err.Error(),
 			Message: fmt.Sprintf("Error while confirming the given path : %s - %s", cfg.FolderName, err.Error()),
+			Provider: `locker.Locker`,
+			ElapsedTime: time.Now(),
 		}
 	}
 
@@ -55,9 +61,11 @@ func Locker(cfg *config.Config) error {
 	}
 	err = os.MkdirAll(requiredFolderCreation,0700)
 	if err != nil {
-		return &config.UserSafetyError{
+		return &config.FunctionFailError{
 			Cause: err.Error(),
 			Message: fmt.Sprintf(`Cannot create the folder %s for the locking data to be stored`,selfDir),
+			Provider: `locker.Locker`,
+			ElapsedTime: time.Now(),
 		}
 	}
 
@@ -67,16 +75,18 @@ func Locker(cfg *config.Config) error {
 
 	mut, alrexist, err := mutex.NewMutex(cfg.FolderName)
 	if err != nil {
-		return &config.UserSafetyError{
+		return &config.FunctionFailError{
 			Cause:   err.Error(),
-			Message: `An internal error has occured while Creating the Mutex for the given folder`,
+			Message: fmt.Sprintf(`An internal error has occured while Creating the Mutex for the given folder - %s`,cfg.FolderName),
 		}
 	}
 	defer mut.CloseMutex()
 	if alrexist {
-		return &config.UserSafetyError{
+		return &config.FunctionCancelError{
 			Cause:   `Mutex already exist`,
 			Message: fmt.Sprintf(`The mutex of the given folder %s is already there`, cfg.FolderName),
+			Provider: `locker.Locker`,
+			ElapsedTime: time.Now(),
 		}
 	}
 
@@ -108,13 +118,6 @@ func Locker(cfg *config.Config) error {
 		return err
 	}
 
-	// - Changes 
-
-	err = corefns.ReplaceZipwithGLock(cfg)
-	if err != nil {
-		return err
-	}
-
 	// Info :  This is just done to save the efficiency of the logger
 	// `if logger.Allowed` is used for the efficiency
 	if cfg.InstructData.Stats {
@@ -132,6 +135,12 @@ func Locker(cfg *config.Config) error {
 				--- --- ---
 			`,cfg.FolderName,foldersize,len(dirdata),elapsedTime.String(),(float64(foldersize)/(1024 * 1024))/elapsedTime.Seconds())
 		fmt.Println(msg)
+	}
+
+	// - Changes 
+	err = corefns.ReplaceZipwithGLock(cfg)
+	if err != nil {
+		return err
 	}
 
 	return nil

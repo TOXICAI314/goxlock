@@ -5,6 +5,7 @@ import (
 	"goxlock/config"
 	"os"
 	"path/filepath"
+	"time"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
@@ -41,18 +42,22 @@ func WindowsPartitionSpace(path string) (*DiskSpace,error) {
 	} else {
 		absPath,err = filepath.Abs(path)
 		if err != nil {
-			return nil,&config.UserSafetyError{
+			return nil,&config.FunctionFailError{
 				Cause: err.Error(),
 				Message: fmt.Sprintf(`Cannot get the absolute path of the given path - %s`,path),
+				ElapsedTime: time.Now(),
+				Provider: `usersafety.WindowsPartitionProvider`,
 			}
 		}
 	}
 
 	volume := filepath.VolumeName(absPath)
 	if volume == `` {
-		return nil,&config.UserSafetyError{
+		return nil,&config.FunctionCancelError{
 			Cause: `Empty Voulme`,
 			Message: fmt.Sprintf(`Got an empty volume for - %s`,absPath),
+			ElapsedTime: time.Now(),
+			Provider: `usersafety.WindowsPartitionProvider`,
 		}
 	}
 
@@ -63,9 +68,11 @@ func WindowsPartitionSpace(path string) (*DiskSpace,error) {
 
 	pathPtr, err := windows.UTF16PtrFromString(volume)
 	if err != nil {
-		return nil, &config.UserSafetyError{
+		return nil, &config.FunctionFailError{
 			Cause: err.Error(),
 			Message: fmt.Sprintf(`Cannot get the pointer of the volume string - %s`,absPath),
+			ElapsedTime: time.Now(),
+			Provider: `usersafety.WindowsPartitionProvider`,
 		}
 	}
 
@@ -81,9 +88,11 @@ func WindowsPartitionSpace(path string) (*DiskSpace,error) {
 	)
 
 	if r1 == 0 {
-		return nil,&config.UserSafetyError{
+		return nil,&config.FunctionFailError{
 			Cause: err.Error(),
 			Message: `The os program didnt went well as expected`,
+			ElapsedTime: time.Now(),
+			Provider: `usersafety.WindowsPartitionProvider`,
 		}
 	}
 
@@ -101,17 +110,21 @@ func WindowsPartitionSpace(path string) (*DiskSpace,error) {
 func CheckSpaceObject(cfg *config.Config) (error) {
 	// - Pre Safety
 	if cfg == nil {
-		return &config.UserSafetyError{
+		return &config.FunctionCancelError{
 			Cause: `Nil pointer reference`,
 			Message: `Given a nil pointer of config for the space checking`,
+			ElapsedTime: time.Now(),
+			Provider: `usersafety.CheckSpaceObject`,
 		}
 	}
 
 	stat,err := os.Stat(cfg.FolderName)
 	if err != nil {
-		return &config.UserSafetyError{
+		return &config.FunctionFailError{
 			Cause: err.Error(),
 			Message: fmt.Sprintf(`Cannot get the stats of the object - %s`,cfg.FolderName),
+			ElapsedTime: time.Now(),
+			Provider: `usersafety.CheckSpaceObject`,
 		}
 	}
 
@@ -124,9 +137,11 @@ func CheckSpaceObject(cfg *config.Config) (error) {
 	// The 1.1 is the margin in bytes for the data to be cared of
 	spaceRequired := uint64(float64(stat.Size()) * 1.2) 
 	if diskSpace.FreeSpcae < spaceRequired {
-		return &config.UserSafetyError{
+		return &config.FunctionCancelError{
 			Cause: fmt.Sprintf(`No disk Space left on the volumne %s`,diskSpace.Volume),
 			Message: fmt.Sprintf(`The space required - %v is more than the space free for the user`,spaceRequired),
+			ElapsedTime: time.Now(),
+			Provider: `usersafety.CheckSpaceObject`,
 		}
 	}
 	return nil

@@ -5,6 +5,7 @@ import (
 	"goxlock/config"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 // - DeleteProfiler
@@ -12,22 +13,28 @@ import (
 func (pf *Profiler) Delete() error {
 	// - Pre Safety
 	if !filepath.IsAbs(ProfilerAppDataPath) {
-		return &config.UserSafetyError{
+		return &config.FunctionFailError{
 			Cause: `Cwd folder detected`,
-			Message: `Absoulte folder needed for storing the Profile`,
+			Message: fmt.Sprintf(`Absoulte folder needed for storing the Profile : %s`,ProfilerAppDataPath),
+			ElapsedTime: time.Now(),
+			Provider: `profiler.Profiler.Delete`,
 		}
 	}
 	err := os.MkdirAll(ProfilerAppDataPath, 0700)
 	if err != nil {
-		return &config.UserSafetyError{
+		return &config.FunctionFailError{
 			Cause:   err.Error(),
-			Message: `Cannot make a folder to store the profile`,
+			Message: fmt.Sprintf(`Cannot make a folder to store the profile : %s`,ProfilerAppDataPath),
+			ElapsedTime: time.Now(),
+			Provider: `profiler.Profiler.Delete`,
 		}
 	}
 	if pf.Name == `` {
-		return &config.UserSafetyError{
+		return &config.FunctionCancelError{
 			Cause:   `Invalid profile name`,
 			Message: `Provide a Valid name to be taken for the profile`,
+			ElapsedTime: time.Now(),
+			Provider: `profiler.Profiler.Delete`,
 		}
 	}
 	

@@ -125,3 +125,9 @@ func GetYesORNo(prompt string) bool {
 	}
 	return false
 }
+
+// - Where
+// Tells the user where the running executable is located
+func Where() (string,error) {
+	return os.Executable()
+} 
