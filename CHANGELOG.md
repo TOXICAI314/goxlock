@@ -12,6 +12,7 @@ Following are the changes made in the `v1.1` update:
 
 - `unsafe` use for time out prompt bypass. (As `unsafe` was meant to bypass these.)
 
+- Buggy `--update` command locking its own way because of the file not closed.
 
 ## Design Improvement
 

@@ -99,7 +99,6 @@ func CheckForUpdate() error {
 			Provider: `unlocker.CheckUpdates`,
 		}
 	}
-	defer permittedTempFile.Close()
 
 	var index int
 	var found bool
@@ -160,6 +159,7 @@ func CheckForUpdate() error {
 		}
 	}
 	actualDigest := fmt.Sprintf("%x", hash.Sum(nil))
+	permittedTempFile.Close()
 
 	givenDigest := release.Assets[index].ShaDigest
 	expectedDigest := strings.TrimPrefix(givenDigest, "sha256:")
