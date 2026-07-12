@@ -80,7 +80,7 @@ func CheckForUpdate() error {
 		}
 	}
 
-	if release.TagName == config.Version {
+	if release.TagName == `v`+config.Version {
 		fmt.Printf(`Already the latest verison of the app installed - %s`,config.Version)
 		return nil
 	}
