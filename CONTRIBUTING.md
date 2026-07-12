@@ -7,7 +7,7 @@ Whether it's a bug report, documentation improvement, or a new feature, every co
 
 ## Version
 
-`v1.0.0.0-Alpha`
+`v1.0.0.0-Beta`
 
 ## Email
 

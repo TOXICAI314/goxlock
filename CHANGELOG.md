@@ -1,12 +1,12 @@
 # UPDATE INFO
 
-Following are the changes made in the `v1.1` update:
+Following are the changes made in the `v1.0.0.0-Beta` update:
 
 ## Fixed Bugs 
 
 - Bug : Missing File stats in the end -> Because the file was already deleted in the first place by `--del-original`.
 
-- Bug : The double click file mechanics will dont delete the locked file on spot after unlcoking.
+- Bug : The double click file mechanics will dont delete the locked file on spot after unlocking.
 
 - Bug : `unsafe` use for time out prompt bypass. (As `unsafe` was meant to bypass these.).
 

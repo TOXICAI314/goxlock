@@ -286,13 +286,9 @@ BECAUSE ASSURANCE COMES FROM TRUST.
 The next update details will be discussed here:
 
 ```text
-v1.1 - The UI update
+v1.1 - The Linux Update
 
-1. Making ui elements better
-2. TUI
-3. Better Error messages
-4. Rich , colorful and structured base output
-4. Logic fixes (always)
+- Adding binary support for the linux
 ```
 
 To see the Changelogs go here -> [Changelogs](CHANGELOG.md)
