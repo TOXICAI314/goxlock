@@ -5,7 +5,6 @@ import (
 	`time`
 )
 
-// - CreateTestUnlockerConfig 
 // Testing for unlcoks and its failing points
 func (dc *Doctor) CreateTestUnlockerConfig() (error) {
 	dc.config.FolderName = dc.config.OutputName

@@ -123,26 +123,28 @@ goxlock --use-profile --profile-name '<name>'
 
 There are vasr number of commands and behaviour you can choose from. Following list will tell the commands in breif.
 
-1. `f` : Telling about the object path (must be absoulte)
-2. `lock` : Locks the given folder
+1. `f`                  : Telling about the object path (must be absoulte)
+2. `lock`               : Locks the given folder
 3. `del-original` : Deletes the original object
-4. `out` : Gives the custom name to the output folder
-5. `unlock` : Unlocks the targetted folder
-6. `time-out` : time-Shedule re encryption over a certain time (must give minute/hour/day timelimits )
-7. `change-password` : Chnages your current password
-8. `exclude` : Excludes given patterns
-9. `verify-password` : Verify your folder password without unlocking it
-10. `header` : Check header data of the encrypted file
-11. `log` : Allow logger to log into the hardcoded files
-12. `read-log` : Toggle the read log function
-13. `stats` : Use it to see the stats of your operation
-14. `log-date` : Gives the log date to instructor
-15. `checkupdate` : Checks for provided updates from trusted sources
-16. `del-profile` : Deletes the named profile
-17. `update-profile` : Updates the named profile with the given data
-18. `use-profile` : Use the saved profile
-19. `make-profile` : Makes the profile of the user as per name
-20. `profile-name` : Stores the name of the profile
+4. `out`                : Gives the custom name to the output folder
+5. `unlock`             : Unlocks the targetted folder
+6. `time-out`           : time-Shedule re encryption over a certain time (must give minute/hour/day timelimits )
+7. `change-password`    : Chnages your current password
+8. `exclude`            : Excludes given patterns
+9. `verify-password`    : Verify your folder password without unlocking it
+10. `header`            : Check header data of the encrypted file
+11. `log`               : Allow logger to log into the hardcoded files
+12. `read-log`          : Toggle the read log function
+13. `stats`             : Use it to see the stats of your operation
+14. `log-date`          : Gives the log date to instructor
+15. `check-update`      : Checks for provided updates from trusted sources
+16. `del-profile`       : Deletes the named profile
+17. `update-profile`    : Updates the named profile with the given data
+18. `use-profile`       : Use the saved profile
+19. `make-profile`      : Makes the profile of the user as per name
+20. `profile-name`      : Stores the name of the profile
+21. `where`             : Gives the current executable location
+
 ## Security
 
 Safety is the only thing that `goxlock` targets . No password or secret is revealed in any file. The password is never stored in raw string or readable format (only for scheduling the password ecrypted form is stored after that it is destroyed).

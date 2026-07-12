@@ -12,7 +12,6 @@ import (
 	"time"
 )
 
-// - Locker
 // Will the lock the file in its `.g-lock` via encryption of the data
 // Once the data has been encrypted the only way to decrypt is via the password and nothing else
 func Locker(cfg *config.Config) error {
@@ -25,7 +24,7 @@ func Locker(cfg *config.Config) error {
 			ElapsedTime: time.Now(),
 		}
 	} 
-	// - Pre Safety 
+	// Pre Safety 
 	stats, err := os.Stat(cfg.FolderName)
 	if err == nil {
 		if !stats.IsDir() {
@@ -69,7 +68,7 @@ func Locker(cfg *config.Config) error {
 		}
 	}
 
-	// - Mutex Locking 
+	// Mutex Locking 
 	// Means getting the mutex for the writing stuff of the data  
 	// The mutex is from the os and cant be penetrated easily
 
@@ -148,7 +147,7 @@ func Locker(cfg *config.Config) error {
 		fmt.Println(msg)
 	}
 
-	// - Changes 
+	// Changes 
 	err = corefns.ReplaceZipwithGLock(cfg)
 	if err != nil {
 		return err

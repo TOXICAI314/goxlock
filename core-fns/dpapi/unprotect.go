@@ -10,17 +10,15 @@ import (
 
 // Info : Point to point explanation in `dpapi/protect.go`
 
-// - Dlls - //
 var (
 	// prcoUnprotectData -> Using the same dll from `protect.go` to uncover the data
 	procUnprotectData = crypt32.NewProc("CryptUnprotectData")
 )
 
-// - Unprotect 
 // Makes the data in raw byte format (readable string bytes)
 func Unprotect(data []byte) ([]byte, error) {
 
-	// - Pre safety - //
+	// Pre safety 
 	if len(data) == 0 {
 		return nil, nil
 	}
@@ -33,7 +31,7 @@ func Unprotect(data []byte) ([]byte, error) {
 
 	var out windows.DataBlob
 
-	// - Decryting 
+	// Decryting 
 	// Using the same format as done in protect
 	r1, _, err := procUnprotectData.Call(
 		uintptr(unsafe.Pointer(&in)),

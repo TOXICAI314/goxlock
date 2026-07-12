@@ -9,10 +9,10 @@ import (
 	"time"
 )
 
-// - ProfileFetcher
+// ProfileFetcher
 // Fetches the profile data and fill it in thee given Instructor Profiler struct
 func (pf *Profiler) Fetch() error {
-	// - Pre Safety
+	// Pre Safety
 	if err := pf.Validate();err != nil {
 		return err
 	}

@@ -8,7 +8,6 @@ import (
 	"time"
 )
 
-// - CreateLockConfig
 // This creates a lock for the doctor to check -> Everything will be in temp folder
 func (dc *Doctor) CreateTestLockerConfig() (error) {
 	tempfolder,err := os.MkdirTemp(``,fmt.Sprintf(`%s-test-%s`,config.Name,dc.config.SessionID))

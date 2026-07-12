@@ -14,7 +14,6 @@ import (
 	"golang.org/x/crypto/argon2"
 )
 
-// - EncryptFileWithHeader
 // EncryptFileWithHeader : Encrypts the file info the undetectable form for user privacy that can only be breached by giving correct password
 func EncryptFileWithHeader(cfg *config.Config) error {
 	if cfg == nil {
@@ -53,7 +52,7 @@ func EncryptFileWithHeader(cfg *config.Config) error {
 		return err
 	}
 
-	// - Header and Writing 
+	// Header and Writing 
 	header := config.CreateHeader(cipherdata)
 	packet,err := config.CreatePacket(header,cipherdata)
 	if err != nil {
@@ -72,11 +71,10 @@ func EncryptFileWithHeader(cfg *config.Config) error {
 	return nil
 }
 
-// - Encrypt
 // Encrypt : Given the bytes , it will encrypt with `aes` with valid protection of `gcm`
 func Encrypt(data []byte, cfg *config.Config) (*config.SharedEncryptionData, error) {
 	
-	// - Pre Safety
+	// Pre Safety
 	switch {
 	case cfg == nil:
 		return nil,&config.FunctionCancelError{
@@ -155,7 +153,7 @@ func Encrypt(data []byte, cfg *config.Config) (*config.SharedEncryptionData, err
 		}
 	}
 
-	// - Encryption 
+	// Encryption 
 	// From here the encryption of the data starts
 	ciphertext := gcm.Seal(nil, nonce, data, nil)
 
@@ -166,7 +164,6 @@ func Encrypt(data []byte, cfg *config.Config) (*config.SharedEncryptionData, err
 	}, nil
 }
 
-// - Decrypt
 // decrypts the file and make it an array of bytes that can be seen
 func Decrypt(sec *config.SharedEncryptionData,cfg *config.Config) ([]byte,error) {
 	// Pre Safety 
@@ -196,7 +193,7 @@ func Decrypt(sec *config.SharedEncryptionData,cfg *config.Config) ([]byte,error)
 		32,
 	)
 
-	// - AES Gcm open 
+	// AES Gcm open 
 	block,err := aes.NewCipher(key)
 	if err != nil {
 		return nil,&config.FunctionFailError{

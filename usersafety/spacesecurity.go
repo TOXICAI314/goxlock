@@ -11,14 +11,12 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-// - Var
 var (
 	kernel32 = windows.NewLazySystemDLL("kernel32.dll")
 	// getDiskFreeSpaceEx -> Is a proc that gives the free space details from the os
 	getDiskFreeSpaceEx = kernel32.NewProc("GetDiskFreeSpaceExW")
 )
 
-// - DiskSpace
 // A struct made for the disk space system which gets a secure way to complete the download
 type DiskSpace struct {
 	Path			string
@@ -31,7 +29,6 @@ type DiskSpace struct {
 	FreeSpcae   	uint64
 }
 
-// - GetWindowsDiskSpace
 // Gets the disk space available to your deivce and make decision if the other data shall be made or not
 func WindowsPartitionSpace(path string) (*DiskSpace,error) {
 
@@ -105,10 +102,9 @@ func WindowsPartitionSpace(path string) (*DiskSpace,error) {
 	}, nil
 }
 
-// - CheckSpaceObject
 // Checks the space for the data that is going to be stored
 func CheckSpaceObject(cfg *config.Config) (error) {
-	// - Pre Safety
+	// Pre Safety
 	if cfg == nil {
 		return &config.FunctionCancelError{
 			Cause: `Nil pointer reference`,
@@ -134,7 +130,7 @@ func CheckSpaceObject(cfg *config.Config) (error) {
 	} 
 
 	// Info : For now the only care is about free space
-	// The 1.1 is the margin in bytes for the data to be cared of
+	// The 1.2 is the margin in bytes for the data to be cared of
 	spaceRequired := uint64(float64(stat.Size()) * 1.2) 
 	if diskSpace.FreeSpcae < spaceRequired {
 		return &config.FunctionCancelError{

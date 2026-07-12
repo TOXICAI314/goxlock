@@ -26,7 +26,7 @@ func ChangePasswordForFolder(cfg *config.Config) (error) {
 	newpassword := cfg.ChangePassword.NewPassword
 
 	
-	// - Pre Safety 
+	// Pre Safety 
 	if _,err := os.Stat(encryptedfolder);err != nil {
 		return &config.FunctionFailError{
 			Cause: err.Error(),
@@ -44,7 +44,7 @@ func ChangePasswordForFolder(cfg *config.Config) (error) {
 		}
 	}
 
-	// - config formation 
+	// config formation 
 	// As the function is standalone and dont get a fullfilled config on it own by the upper commands
 	// The code have to build its own
 	u_cfg := config.Config{
@@ -62,7 +62,7 @@ func ChangePasswordForFolder(cfg *config.Config) (error) {
 		return err
 	}
 
-	// - Relocking config 
+	// Relocking config 
 	ru_cfg := config.Config{
 		FolderName: u_cfg.OutputName,
 		Password: newpassword,

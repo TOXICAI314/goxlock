@@ -9,10 +9,9 @@ import (
 	"time"
 )
 
-// - VerifyUnlock
 // Will verify the given password and will provide error if there are any
 func VerifyUnlock(cfg *config.Config) error {
-	// - Pre Safety
+	// Pre Safety
 	if cfg == nil {
 		return &config.FunctionCancelError{
 			Cause: `Nil pointer dereference`,

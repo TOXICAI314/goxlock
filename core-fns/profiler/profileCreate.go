@@ -10,11 +10,11 @@ import (
 	"time"
 )
 
-// - Create
+// Create
 // Is a function that Creates the Profile from Profiler
 // This Profile struct is then dumped into the %APPDATA%/Roaming/name of the application
 func (pf *Profiler) Create() error {
-	// - Pre Safety
+	// Pre Safety
 	if err := pf.Validate();err != nil {
 		return err
 	}

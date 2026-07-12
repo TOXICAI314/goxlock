@@ -15,13 +15,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// - Helpful Variables
+// Helpful Variables
 // These varibales will only be used in cmd/root.go for assists
 var (
 	provider 	string  	= 		`cmd.root`
 )
 
-// - Binded Variables
+// Binded Variables
 // Info : Binded variable are binded towards a flag which dumps its value to the variable
 var (
 	// FolderName -> The main variable that contains the folder info of the user command
@@ -32,7 +32,7 @@ var (
 	Password string
 )
 
-// - Hidden Bind Variables
+// Hidden Bind Variables
 // Used for the application internal use and lower case uses
 var (
 	// relock -> switch to relock the file after a given duration
@@ -41,10 +41,10 @@ var (
 	sessionId string
 )
 
-// - Trivial Acting
-// - Variables that are just needed to activate certain features and plays no role afterwards
+// Trivial Acting
+// Variables that are just needed to activate certain features and plays no role afterwards
 var (
-	// - Config Section
+	// Config Section
 	// Info : These variabeles are to setup actions for the config
 
 	// lock -> Triggers lock action
@@ -58,7 +58,7 @@ var (
 	// header -> Triggers header seeking mechanism
 	header 			bool
 
-	// - Instruction Section
+	// Instruction Section
 	// Info : These variables are for the instructions that comes with config
 
 	// deloriginal -> Triggers self deletion of the folder or the file
@@ -75,26 +75,26 @@ var (
 	// loggerallowed -> Toggles the logger that will write the logs into the log file
 	loggerallowed bool
 
-	// - Profile
+	// Profile
 	// Info : Deals with the arguments passed for the profiling system
 
 	// profileName -> profiles the name of the current profile
 	profileName string
 
-	// - Log
+	// Log
 	// Deals with the argumenst passe for the loging section
 	logdate 	string
 
-	// - Updater
+	// Updater
 	// Deals with update and stuff
 	checkupdate bool
 
-	// - TUI
+	// TUI
 	// The triggering point of tui
 	serve_tui 		bool
 )
 
-// - One time runners
+// One time runners
 // These will run at the starting of the code if given and will return immediately without causeing any action
 var (
 	// doctorcheck -> fires the checkup for the perfect working of the application on your device
@@ -120,14 +120,14 @@ var Cfg *config.Config = &config.Config{}
 
 // rootcmd -> is the main command that is used to trigger all the tasks
 var rootcmd *cobra.Command = &cobra.Command{
-	// - Base definition
+	// Base definition
 	// These will be used to run the main command and get the version info
 	// Any change in `Use` field -> Different name for running the command
 	Use:     config.Name,
 	Long: 	 config.Banner,
 	Version: utils.GetBasicVersionDetails(config.VersionRelease),
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		// - PreRunner
+		// PreRunner
 		// This will run in the starting doing the objective that is assigned to it or left by previous work
 
 		// Info : This will clear the cache that is stored into the temporary folder
@@ -145,7 +145,6 @@ var rootcmd *cobra.Command = &cobra.Command{
 
 	RunE: func(cmd *cobra.Command, args []string) error {
 
-		// - One time Fire commands /
 		// These will fire and return without encroaching the action
 		switch {
 		case checkupdate:
@@ -279,7 +278,7 @@ var rootcmd *cobra.Command = &cobra.Command{
 			exlude = pf.Instruction.Exclusion
 			unsafe = pf.Instruction.UnSafe
 		}
-		// - Incompatible
+
 		// Incomapttible commands which may conflict in their works will get struck out here
 		switch {
 		case verifyPassword, changePassword, lock, unlock, header:
@@ -302,10 +301,10 @@ var rootcmd *cobra.Command = &cobra.Command{
 			}
 		}
 
-		// - Data Dump
-		// - Info : All the user request will be dumped into the global config struct `Cfg`
+		// Data Dump
+		// Info : All the user request will be dumped into the global config struct `Cfg`
 
-		// - Config Section
+		// Config Section
 
 		var Timeout time.Duration
 		var err error
@@ -347,7 +346,7 @@ var rootcmd *cobra.Command = &cobra.Command{
 		}
 		var action int
 
-		// - Singularity Check
+		// Singularity Check
 		// Info : This checks for the passing of the only action , as two or more can result in undefined behaviour
 
 		var actionArray []bool = make([]bool, 0)
@@ -395,7 +394,7 @@ var rootcmd *cobra.Command = &cobra.Command{
 		Cfg.OutputName = OutputName
 		Cfg.StartedAt = time.Now()
 
-		// - Password Security
+		// Password Security
 		// Info : Gets the password from the user and hide it from the terminal buffer
 		// As terminal bugger stores every stuff , its neccessary to delete whats need to be private
 
@@ -472,7 +471,7 @@ var rootcmd *cobra.Command = &cobra.Command{
 		}
 		Cfg.Password = Password
 
-		// - Instruction Section
+		// Instruction Section
 		Cfg.InstructData.DeleteOriginal = deleteoriginal
 		Cfg.InstructData.Timeout = Timeout
 		Cfg.InstructData.Exclusion = exlude
@@ -485,7 +484,7 @@ var rootcmd *cobra.Command = &cobra.Command{
 			return err
 		}
 
-		// - Actions
+		// Actions
 		return performer.PerformAction(Cfg)
 	},
 }
@@ -498,11 +497,11 @@ func Execute() error {
 	return rootcmd.Execute()
 }
 
-// - Init function
+// Init function
 // 1. init() -> Runs in the startup of this file and will collect all the values binded to the flags
 func init() {
 
-	// - Usable Flags
+	// Usable Flags
 	// The Flags that are not hidden and is visible to all the users
 	rootcmd.Flags().StringVarP(&FolderName, `folder`, `f`, ``, `Folder to encrypt`)
 	rootcmd.Flags().BoolVar(&lock, `lock`, false, `Lock the given folder`)
@@ -520,17 +519,16 @@ func init() {
 	rootcmd.Flags().StringVar(&logdate, `log-date`, ``, `Gives the log date to instructor`)
 	rootcmd.Flags().BoolVar(&where,`where`,false,`Gives current working executable path`)
 
-	// - Profile
+	// Profile
 	rootcmd.Flags().BoolVar(&makeprofile, `make-profile`, false, `Makes the profile of the user as per name`)
 	rootcmd.Flags().StringVar(&profileName, `profile-name`, ``, `Stores the name of the profile`)
 	rootcmd.Flags().BoolVar(&deleteprofile, `del-profile`, false, `Deletes the named profile`)
 	rootcmd.Flags().BoolVar(&updateprofile, `update-profile`, false, `Updates the named profile with the given data`)
 	rootcmd.Flags().BoolVar(&useprofile, `use-profile`, false, `Use the saved profile`)
 
-	// - Updater
+	// Updater
 	rootcmd.Flags().BoolVar(&checkupdate, `check-update`, false, `Checks for provided updates from trusted sources`)
 
-	// - Hidden Flags
 	// Hidden Flags -> For super users (features of future) or application internal use calls
 	rootcmd.Flags().StringVar(&sessionId, `session`, ``, `Use it to assign a session to the folder`)
 	rootcmd.Flags().BoolVar(&relock, `re-lock`, false, `Toggle relocking mechanism`)

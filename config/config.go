@@ -12,12 +12,11 @@ import (
 const (
 	VersionMajor = 1
 	VersionMinor = 0
-	Patch        = 0
-	Revision      = 0
+	Patch        = 1
 	Release      = beta
 )
 
-var Version string = fmt.Sprintf(`%d.%d.%d.%d`, VersionMajor, VersionMinor, Patch, Revision)
+var Version string = fmt.Sprintf(`%d.%d.%d`, VersionMajor, VersionMinor, Patch)
 var VersionRelease string = fmt.Sprintf(`%s-%s`, Version, Release)
 
 // Release Verion and Path allocators
@@ -26,8 +25,6 @@ const (
 	alpha = `Alpha`
 	// Beta  = Done featuring but need testing
 	beta = `Beta`
-	// RC    = Everything is done and is going for last tests (can contain minor bugs) (early adopters)
-	RC = `Release Candidate`
 	// GA 	 = Available fopr 100% potential with no bugs
 	stable = `Stable`
 )
@@ -118,7 +115,7 @@ type ChangePasswordData struct {
 // Header : The base header data for the extension `glock`
 type Header struct {
 	Magic   [7]byte
-	Version [7]byte
+	Version [5]byte
 	Salt    [16]byte
 	Nonce   [12]byte
 }

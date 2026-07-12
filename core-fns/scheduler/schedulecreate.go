@@ -9,7 +9,6 @@ import (
 	"time"
 )
 
-// - CreateShedule
 // CreateShedule : Will create the shedules task and will run with the help of `sctasks` native to windows
 func CreateShedule(sessionID string,instructions config.Instructions) error {
 	// - Pre Safety

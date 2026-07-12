@@ -7,7 +7,6 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-// - CloseMutex
 // Will close the given folder mutex -> Normally ending
 // Even if crashed app , os will free automatically
 func (fMutex *FolderMutex) CloseMutex() error {

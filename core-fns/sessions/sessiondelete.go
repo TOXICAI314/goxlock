@@ -9,11 +9,10 @@ import (
 	"time"
 )
 
-// - Delete
 // Delete : deletes the given session with the given id
 func Delete(id string) error {
 
-	// - Pre safety
+	// Pre safety
 	if err := SessionValidate(id);err != nil {
 		return err
 	}

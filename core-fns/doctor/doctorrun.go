@@ -14,7 +14,6 @@ import (
 	"time"
 )
 
-// - Start
 // This function automatically runs all the comands to check that is there any error formed while the app is running on a device
 func (dc *Doctor) Start() error {
 	dc.config.SessionID = utils.CreateSessionID() 

@@ -11,7 +11,6 @@ import (
 	"time"
 )
 
-// - Header
 // Gives the raw header of the `g-lock` file
 func Header(file string) (*config.Header,error) {
 	// - Pre Safety
@@ -35,7 +34,7 @@ func Header(file string) (*config.Header,error) {
 	}
 
 	defer O_file.Close()
-	var data [42]byte = [42]byte{}
+	var data [40]byte = [40]byte{}
 	// Info : This reduces the overhead to read the whole file and then go forward
 	_,err = O_file.ReadAt(data[:],0)
 	if err != nil {
@@ -63,10 +62,9 @@ func Header(file string) (*config.Header,error) {
 	return header,nil
 }
 
-// - GetUnlockedData 
 // will verify the unlocked file and will give the data of the file that is needed
 func GetUnlockedData(cfg *config.Config, rawData []byte) ([]byte, error) {
-	// - Pre Safety
+	// Pre Safety
 	switch {
 	case cfg == nil: 
 		return nil,&config.FunctionCancelError{

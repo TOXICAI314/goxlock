@@ -2,7 +2,6 @@ package doctor
 
 import "goxlock/config"
 
-// - CreateTestChangePasswordConfig 
 // This will create a config for the test of the configuration
 func (dc *Doctor) CreateTestChangePasswordConfig() (error) {
 	dc.config.FolderName = dc.config.OutputName

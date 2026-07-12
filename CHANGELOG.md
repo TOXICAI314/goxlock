@@ -1,6 +1,6 @@
 # UPDATE INFO
 
-Following are the changes made in the `v1.0.0.0-Beta` update:
+Following are the changes made in the `v1.0.1-Beta` update:
 
 ## Fixed Bugs 
 

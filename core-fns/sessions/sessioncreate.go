@@ -10,11 +10,10 @@ import (
 	"time"
 )
 
-// - CreateSession
 // Makes the session to its Program files and saves the data for further use cases
 func (s *Session) CreateSession() error {
 
-	// - Pre Safety Run
+	// Pre Safety Run
 	if !filepath.IsAbs(SessionConfigDir) {
 		return &config.FunctionCancelError{
 			Cause:       `CWD session path`,
@@ -33,7 +32,7 @@ func (s *Session) CreateSession() error {
 		}
 	}
 
-	// - Making session file
+	// Making session file
 	data, err := json.MarshalIndent(s, ``, ` `)
 	if err != nil {
 		return &config.FunctionFailError{
@@ -63,7 +62,7 @@ func (s *Session) CreateSession() error {
 			Provider:    `session.Session.CreateSession`,
 		}
 	}
-	// - Data Dump
+	// Data Dump
 	err = os.WriteFile(filename, data, 0700)
 	if err != nil {
 		return &config.FunctionFailError{

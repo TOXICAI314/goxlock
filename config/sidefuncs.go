@@ -7,18 +7,16 @@ import (
 	"time"
 )
 
-// - CreateHeader
 // CreateHeader : makes a header based on the Shared Encrypted data
 func CreateHeader(end *SharedEncryptionData) *Header {
 	return &Header{
 		Magic: [7]byte([]byte(Name)),
-		Version: [7]byte([]byte(Version)),
+		Version: [5]byte([]byte(Version)),
 		Salt: [16]byte(end.Salt),
 		Nonce: [12]byte(end.Nonce),
 	}
 }
 
-// - CreatePacket
 // CreatePacket : Creates a header package that can get written into the file directly
 func CreatePacket(hd *Header,end *SharedEncryptionData) ([]byte,error) {
 	switch {
@@ -38,8 +36,8 @@ func CreatePacket(hd *Header,end *SharedEncryptionData) ([]byte,error) {
 		}
 	}
 
-	// Info : 42 is for the header -> See the data structure
-	totalSize := 42	+ len(end.EncryptedData)
+	// Info : 40 is for the header -> See the data structure
+	totalSize := 40	+ len(end.EncryptedData)
 	packet := make([]byte, 0, totalSize)
 
 	packet = append(packet, hd.Magic[:]...)
@@ -51,7 +49,6 @@ func CreatePacket(hd *Header,end *SharedEncryptionData) ([]byte,error) {
 	return packet,nil
 }
 
-// - ReadHeader
 // ReadHeader : Reads the valid `glock` header
 func ReadHeaderAndRest(data []byte) (*Header,[]byte,error) {
 	if len(data) == 0 {
@@ -80,8 +77,7 @@ func ReadHeaderAndRest(data []byte) (*Header,[]byte,error) {
 	// Info : And the rest of the data will be read (as the Reader pointer has been shifted)
 	return header,dataReader.Bytes(),nil
 }
-
-// - ValidateHeader 
+ 
 // ValidateHeader : Gives a forward walking rights to the header if it is correct
 func ValidateHeader(hd *Header) error {
 	// PreSafety

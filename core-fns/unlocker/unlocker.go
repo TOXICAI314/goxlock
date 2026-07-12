@@ -16,7 +16,6 @@ import (
 	"time"
 )
 
-// - Unlocker
 // unlocks the locked extension file -> only if the header is correct && file has not been altered
 func Unlocker(cfg *config.Config) error {
 	if cfg == nil {
@@ -36,7 +35,7 @@ func Unlocker(cfg *config.Config) error {
 		return err
 	}
 
-	// - Pre Safety 
+	// Pre Safety 
 	if ext := filepath.Ext(*targetglockfile); ext != config.LockExt {
 		return &config.FunctionCancelError{
 			Cause:   `Invalid extension`,
@@ -76,7 +75,7 @@ func Unlocker(cfg *config.Config) error {
 		}
 	} 
 
-	// - Mutex Locking 
+	// Mutex Locking 
 	mut, alrexist, err := mutex.NewMutex(*targetglockfile)
 	if err != nil {
 		return &config.FunctionFailError{
@@ -110,7 +109,7 @@ func Unlocker(cfg *config.Config) error {
 	}
 
 	benchmarktimestart := time.Now()
-	// - Timeout Saefty 
+	// Timeout Saefty 
 	if cfg.InstructData.Timeout > 0 {
 		if cfg.SessionID == `` {
 				return &config.FunctionCancelError{

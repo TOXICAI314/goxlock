@@ -12,7 +12,6 @@ import (
 	"time"
 )
 
-// - Zip
 // commit zip onto the given folder but preserving the tree structure
 func Zip(cfg *config.Config) error {
 	if cfg == nil {
@@ -27,7 +26,7 @@ func Zip(cfg *config.Config) error {
 	zipName := &cfg.OutputName
 	folder := &cfg.FolderName
 
-	// - Pre Safety 
+	// Pre Safety 
 	if _,err := os.Stat(*folder);err != nil {
 		return &config.FunctionFailError{
 			Cause: err.Error(),
@@ -37,7 +36,7 @@ func Zip(cfg *config.Config) error {
 		}
 	}
 
-	// - Zipping
+	// Zipping
 	zipFile,err := os.OpenFile(*zipName,os.O_CREATE|os.O_RDWR,0700)
 	if err != nil {
 		return &config.FunctionFailError{
@@ -78,7 +77,7 @@ func Zip(cfg *config.Config) error {
 		if info.Mode()&os.ModeSymlink != 0 {
 			return nil
 		}
-		// - Exclusion 
+		// Exclusion 
 		for _,exdExt := range cfg.InstructData.Exclusion {
 			if ok,_ := filepath.Match(exdExt,filepath.Base(relPath));ok {
 				return nil
@@ -147,10 +146,9 @@ func Zip(cfg *config.Config) error {
 	return nil
 }
 
-// - Unzip
 // Unzips the provided zip folder and makes a final folder out of that
 func Unzip(cfg *config.Config,data []byte) error {
-	// - Pre Saefety
+	// Pre Saefety
 	switch {
 	case len(data) == 0:
 		return &config.FunctionCancelError{
@@ -185,7 +183,7 @@ func Unzip(cfg *config.Config,data []byte) error {
 		}
 	}
 
-	// - Main Unzipping
+	// Main Unzipping
 	// This unzips the file and secures its data into a folder structure
 	
 	for _, file := range reader.File {

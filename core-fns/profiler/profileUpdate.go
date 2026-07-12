@@ -4,10 +4,9 @@ import (
 	"goxlock/config"
 )
 
-// - Update
 // Will update the profiler with the given data and then call `pf.Create` to store all the data
 func (pf *Profiler) Update(outname string, instruction *config.Instructions) error {
-	// - Pre Safety
+	// Pre Safety
 	if err := pf.Validate();err != nil {
 		return err
 	}

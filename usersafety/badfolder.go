@@ -1,67 +1,81 @@
 package usersafety
 
 import (
+	"goxlock/config"
 	"os"
 	"path/filepath"
+	"time"
 )
 
-// userHome -> Tells the base directory for the user
-var userHome,_ = os.UserHomeDir()
+// BadFolders -> The folder which can never be changed even if user want
+var BadFolders = map[string]bool{}
 
-// - BadFolders -> The folder which can never be changed even if user want
-var BadFolders = map[string]bool{
-	// Empty
-	"": true,
+func InitializeBadFolders() error {
+	// Pre Safety
+	userHome,err := os.UserHomeDir()
+	if err != nil {
+		return &config.FunctionFailError{
+			Cause: err.Error(),
+			Message: `The Home dir cannot be initialized to form the bad folder security`,
+			ElapsedTime: time.Now(),
+			Provider: `usersafety.InitializeBadFolder`,
+		}
+	}
 
-	// Drive Roots
-	`C:\`: true,
-	`D:\`: true,
-	`E:\`: true,
-	`F:\`: true,
+	BadFolders = map[string]bool{
+		// Empty
+		"": true,
 
-	// Windows Core
-	`C:\Windows`:                  true,
-	`C:\Windows\System32`:         true,
-	`C:\Windows\SysWOW64`:         true,
-	`C:\Windows\WinSxS`:           true,
-	`C:\Windows\Boot`:             true,
-	`C:\Windows\Fonts`:            true,
-	`C:\Windows\Installer`:        true,
-	`C:\Windows\Security`:         true,
-	`C:\Windows\SystemResources`:  true,
-	`C:\Windows\servicing`:        true,
+		// Drive Roots
+		`C:\`: true,
+		`D:\`: true,
+		`E:\`: true,
+		`F:\`: true,
 
-	// Program Installation
-	`C:\Program Files`:            true,
-	`C:\Program Files (x86)`:      true,
-	`C:\ProgramData`:              true,
+		// Windows Core
+		`C:\Windows`:                  true,
+		`C:\Windows\System32`:         true,
+		`C:\Windows\SysWOW64`:         true,
+		`C:\Windows\WinSxS`:           true,
+		`C:\Windows\Boot`:             true,
+		`C:\Windows\Fonts`:            true,
+		`C:\Windows\Installer`:        true,
+		`C:\Windows\Security`:         true,
+		`C:\Windows\SystemResources`:  true,
+		`C:\Windows\servicing`:        true,
 
-	// Recovery & System
-	`C:\Recovery`:                 true,
-	`C:\System Volume Information`: true,
-	`C:\$Recycle.Bin`:             true,
+		// Program Installation
+		`C:\Program Files`:            true,
+		`C:\Program Files (x86)`:      true,
+		`C:\ProgramData`:              true,
 
-	// User Profile Critical
-	`C:\Users\Default`:            true,
-	`C:\Users\Default User`:       true,
-	`C:\Users\Public`:             true,
+		// Recovery & System
+		`C:\Recovery`:                 true,
+		`C:\System Volume Information`: true,
+		`C:\$Recycle.Bin`:             true,
 
-	// AppData 
-	filepath.Join(userHome, "AppData")             :  true,
-	filepath.Join(userHome, "AppData", "Local")    :  true,
-	filepath.Join(userHome, "AppData", "Roaming")  :  true,
-	filepath.Join(userHome, "AppData", "LocalLow") :  true,
+		// User Profile Critical
+		`C:\Users\Default`:            true,
+		`C:\Users\Default User`:       true,
+		`C:\Users\Public`:             true,
 
-	// Windows Apps
-	`C:\Program Files\WindowsApps`: true,
+		// AppData 
+		filepath.Join(userHome, "AppData")             :  true,
+		filepath.Join(userHome, "AppData", "Local")    :  true,
+		filepath.Join(userHome, "AppData", "Roaming")  :  true,
+		filepath.Join(userHome, "AppData", "LocalLow") :  true,
 
-	// Defender
-	`C:\ProgramData\Microsoft\Windows Defender`: true,
+		// Windows Apps
+		`C:\Program Files\WindowsApps`: true,
 
-	// Driver Store
-	`C:\Windows\System32\DriverStore`: true,
+		// Defender
+		`C:\ProgramData\Microsoft\Windows Defender`: true,
 
-	// EFI (if mounted)
-	`C:\EFI`: true,
+		// Driver Store
+		`C:\Windows\System32\DriverStore`: true,
+
+		// EFI (if mounted)
+		`C:\EFI`: true,
+	}
+	return nil
 }
-

@@ -9,7 +9,6 @@ import (
 	"time"
 )
 
-// - ReadSession
 // ReadSession : Will read the given session by its id and returns the desired struct
 func ReadSession(id string) (*Session, error) {
 

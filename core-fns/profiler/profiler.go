@@ -9,7 +9,6 @@ import (
 	"time"
 )
 
-// - Var
 var (
 	// ProfileName -> The name for the profiler by which its subsystem file structure will go
 	ProfilerName string = `profile`
@@ -19,7 +18,7 @@ var (
 	ProfilePattern string = `%s-Profile-%s` + config.JsonExt
 )
 
-// - Profiler
+// Profiler
 // Strcut based on the data of user preference and control flow
 // It can be switched from user to user to get the certainity of what the user wanted before
 // No sesitive data will stored in the struct , Only the data that is based on preference is stored

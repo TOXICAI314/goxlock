@@ -10,27 +10,23 @@ import (
 	"time"
 )
 
-// - Vars
 var (
 	LoggerName        string = `logs`
 	LoggerConfigDir string = filepath.Join(config.GoxLockConfigDir, LoggerName)
 	Loggerpattern     string = `goxlock-log-%s` + config.JsonExt
 )
 
-// - Logger
 // Logger is just a printer that allows printing the extras on the desired `*os.File`
 type Logger struct {
 	Place                string
 	CollectiveLoggerData LoggerData
 }
 
-// - LoggerData
 // Will keep all the fields form the config that is needed
 type LoggerData struct {
 	Logs 	[]ConfiguredConfigData		`json:"logs"`
 }
 
-// - ConfiguredConfigData
 // The safe form of the configuration that can be stored
 type ConfiguredConfigData struct {
 	SessionID        string              `json:"session"`
@@ -43,7 +39,6 @@ type ConfiguredConfigData struct {
 	ErrorEncountered string               `json:"error"`
 }
 
-// - Write
 // Prints the data as normal but in the given destination and Permission
 func (lg *Logger) Write() error {
 	// - Mutex
@@ -87,7 +82,6 @@ func (lg *Logger) Write() error {
 	return err
 }
 
-// - Read
 // It reads the data if the allowance is done
 func (lg *Logger) Read(buf *[]byte) error {
 	data, err := os.ReadFile(lg.Place)
@@ -103,7 +97,6 @@ func (lg *Logger) Read(buf *[]byte) error {
 	return nil
 }
 
-// - Log
 // The main function which writes into the goxlock appdata folder for log
 func Log(cfg *config.Config, errEncountered error) (*Logger, error) {
 	if cfg == nil {
@@ -115,7 +108,7 @@ func Log(cfg *config.Config, errEncountered error) (*Logger, error) {
 		}
 	} 
 
-	// - Pre Safety
+	// Pre Safety
 	if !filepath.IsAbs(LoggerConfigDir) {
 		return nil, &config.FunctionCancelError{
 			Cause:   `Cwd Folder Detected`,
@@ -173,7 +166,6 @@ func Log(cfg *config.Config, errEncountered error) (*Logger, error) {
 	}, nil
 }
 
-// - ReadLogFile 
 // This Reads the log file and returns the Logger that is needed 
 func ReadLogFile(formattedTime string) (*Logger,error) {
 	// - Pre Safety

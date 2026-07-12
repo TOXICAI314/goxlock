@@ -29,9 +29,6 @@ type Asset struct {
 	ShaDigest			string `json:"digest"`
 }
 
-
-
-// - CheckForUpdate
 // This will check for update from trusted sources
 func CheckForUpdate() error {
 	// Info : The safe url for goxlock latest release

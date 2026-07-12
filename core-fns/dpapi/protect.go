@@ -8,7 +8,6 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-// - Dlls
 // Dlls will be used to call the windows encryption agents -> Encryption is unique per user
 var (
 	// crypt32 -> A cryptography dll for the windows system
@@ -25,17 +24,15 @@ var (
 	procLocalFree   = kernel32.NewProc(`LocalFree`)
 )
 
-// - Flags 
 // These flags are constant and are used for custom behaviours in the dll
 const (
 	// CryptoProtectUIForbidden -> Prevnts the ui for the cryptography from opening
 	CRYPTPROTECT_UI_FORBIDDEN = 0x1
 )
 
-// - Protect 
 // Protect : Will encrypt the data that is given to it by the os level encryption
 func Protect(data []byte) ([]byte, error) {
-	// - Pre Safety Check 
+	// Pre Safety Check 
 	if len(data) == 0 {
 		return nil, &config.FunctionCancelError{
 			Cause:   `Data is empty`,
@@ -45,7 +42,7 @@ func Protect(data []byte) ([]byte, error) {
 		}
 	}
 
-	// - Data blob
+	// Data blob
 	// The needed fundamental for the sharing of the data b/w windows api
 	in := windows.DataBlob{
 		Size: uint32(len(data)),
@@ -58,7 +55,7 @@ func Protect(data []byte) ([]byte, error) {
 
 	var out windows.DataBlob
 
-	// - Function 
+	// Function 
 	// `Call` makes that function get called with the desired parametres
 	// See the web for the parametres or just breifly see them here
 	r1, _, err := procProtectData.Call(
@@ -108,7 +105,7 @@ func Protect(data []byte) ([]byte, error) {
 	// And as out.Data already contains the `datablob`its size is known by the compiler
 	defer procLocalFree.Call(uintptr(unsafe.Pointer(out.Data)))
 
-	// - Extraction 
+	// Extraction 
 	result := make([]byte, out.Size)
 	// Info : As out data is not of this programm
 	// The programm cant use it directly -> alternative .. copy

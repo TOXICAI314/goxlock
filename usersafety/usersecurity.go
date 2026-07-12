@@ -6,11 +6,14 @@ import (
 	"time"
 )
 
-// - SecureFolder
-// - SecureFolder : Will make sure none of the badfolder can enter the lock chart
+// SecureFolder : Will make sure none of the badfolder can enter the lock chart
 func SecureFolder(cfg *config.Config) error {
 	folder := cfg.FolderName
 	if cfg.InstructData.DeleteOriginal {
+		err := InitializeBadFolders()
+		if err != nil {
+			return err
+		}
 		if bad,_ := BadFolders[folder];bad {
 		return &config.FunctionCancelError{
 				Cause: fmt.Sprintf("A bad folder input of : %s",folder),
@@ -22,4 +25,3 @@ func SecureFolder(cfg *config.Config) error {
 	}
 	return nil
 }
-// - SecureFolder

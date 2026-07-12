@@ -14,10 +14,9 @@ import (
 	"time"
 )
 
-// - PerformAction
 // Will translate user `int` action instructions -> Performable sections
 func PerformAction(cfg *config.Config) error {
-	// - Pre Safety 
+	// Pre Safety 
 	if cfg == nil {
 		return &config.FunctionCancelError{
 			Cause: `Nil pointer dereference`,
@@ -30,7 +29,7 @@ func PerformAction(cfg *config.Config) error {
 	var err error  
 
 	defer func() {
-		// - Logger Entry
+		// Logger Entry
 		// Logger logs here to put the end results
 		if cfg.InstructData.LoggerAllowed {
 			var loggerx *logger.Logger

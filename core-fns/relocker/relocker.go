@@ -9,7 +9,6 @@ import (
 	"time"
 )
 
-// - Relocker
 // A scheduled action that will relock the given folder as user commands
 // It dont need config upport as it can read it own data forming `Session`
 func Relocker(sessionId string) error {
@@ -36,7 +35,7 @@ func Relocker(sessionId string) error {
 
 	defer sessions.Delete(sessionId)
 	defer scheduler.DeleteSchedule(sessionId)
-	// - Config construct 
+	// Config construct 
 	// This will reconstruct config to use `locker/locker.go` 
 	// [Maybe my first time writting like this in this codebase but i aint writting whole another logic for relock]
 	var cfg *config.Config = &config.Config{

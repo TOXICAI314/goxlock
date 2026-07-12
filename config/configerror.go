@@ -5,7 +5,6 @@ import (
 	"time"
 )
 
-// - FunctionFailError
 // Function Fail error will be shown when a function has failed due to its internal structure or underlying function
 type FunctionFailError struct {
 	Cause       string
@@ -18,7 +17,6 @@ func (ff *FunctionFailError) Error() string {
 	return fmt.Sprintf("Cause (The function Failed because): %s\nMessage : %s\nCrashed Time : %s\nCrash Function : %s", ff.Cause, ff.Message, ff.ElapsedTime.Format("15:04:05"), ff.Provider)
 }
 
-// - FunctionCancelError
 // The error which is formed when the function returns abnormally due to wrong configuration
 type FunctionCancelError struct {
 	Cause 		string

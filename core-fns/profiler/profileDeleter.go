@@ -9,10 +9,10 @@ import (
 	"time"
 )
 
-// - DeleteProfiler
+// DeleteProfiler
 // Will Delete the profile if user want it so
 func (pf *Profiler) Delete() error {
-	// - Pre Safety
+	// Pre Safety
 	if err := pf.Validate();err != nil {
 		return err
 	}

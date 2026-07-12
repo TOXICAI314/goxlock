@@ -9,13 +9,11 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-// - FolderMutex
 // Creates a mutex onto the folder that `goxlock` is currently working on
 type FolderMutex struct {
 	handle 	windows.Handle
 }
 
-// - mutexName 
 // mutexName : Create the Name of the mutex that is unique to the folder (it will be a hash)
 func mutexname(folder string) (string,error) {
 
@@ -34,7 +32,6 @@ func mutexname(folder string) (string,error) {
 	return `Global\GoXLock_` + hex.EncodeToString(hash[:]),nil
 }
 
-// - NewMutex 
 // Creates a new mutex for the folder specified
 func NewMutex(object string) (folderMutex *FolderMutex,alreadyexists bool,err error)  {
 

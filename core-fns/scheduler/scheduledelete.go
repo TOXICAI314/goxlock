@@ -7,11 +7,10 @@ import (
 	"time"
 )
 
-// - DeletSchedule()
 // Will delete shedule from the task schdules which was scheduled before
 func DeleteSchedule(sessionID string) error {
 
-    // - Pre Safety
+    // Pre Safety
     if sessionID == `` {
 		return &config.FunctionCancelError{
 			Cause: `Empty id string`,

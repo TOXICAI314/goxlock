@@ -9,7 +9,6 @@ import (
 	"time"
 )
 
-// - ReplaceZipwithGLock
 // Replaces the zip file to a secure `.lock` structure
 func ReplaceZipwithGLock(cfg *config.Config) error {
 	
@@ -24,7 +23,7 @@ func ReplaceZipwithGLock(cfg *config.Config) error {
 	
 	zipfile := &cfg.OutputName
 	target := &cfg.FolderName
-	// - Pre Safety 
+	// Pre Safety 
 
 	if _,err := os.Stat(*zipfile);err != nil {
 		return &config.FunctionFailError{
