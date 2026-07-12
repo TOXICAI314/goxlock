@@ -125,7 +125,7 @@ var rootcmd *cobra.Command = &cobra.Command{
 	// Any change in `Use` field -> Different name for running the command
 	Use:     config.Name,
 	Long: 	 config.Banner,
-	Version: utils.GetBasicVersionDetails(fmt.Sprintf(`%.1f`,config.Version)),
+	Version: utils.GetBasicVersionDetails(config.VersionRelease),
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		// - PreRunner
 		// This will run in the starting doing the objective that is assigned to it or left by previous work
@@ -327,10 +327,13 @@ var rootcmd *cobra.Command = &cobra.Command{
 				Better lock your device so that no one from your side can decrypt your data for that time period.
 				As once the scheduler has done working , the scheduled file will be auto deleted.
 
-				Are you sure you wanna schedule this task OR Just do the action without any timeout ? (y/n) : `, timeoutS),
+				Are you sure you wanna schedule this task ? 
+				y - Yes I am totally aware of what I am doing.
+				n - I will unlock normally.
+				(y/n): `, timeoutS),
 				)
 			}
-			if !ans {
+			if ans {
 				Timeout, err = time.ParseDuration(timeoutS)
 				if err != nil {
 					return &config.FunctionFailError{

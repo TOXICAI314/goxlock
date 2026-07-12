@@ -1,6 +1,8 @@
 package header
 
 import (
+	"bytes"
+	"encoding/binary"
 	"fmt"
 	"goxlock/config"
 	corefns "goxlock/core-fns"
@@ -18,23 +20,44 @@ func Header(file string) (*config.Header,error) {
 			Cause: `Unwanted extension`,
 			Message: fmt.Sprintf(`Wanted - %s ; Given - %s`,config.LockExt,ext),
 			ElapsedTime: time.Now(),
-			Provider: `unlocker.Header`,
+			Provider: `header.Header`,
 		}
 	}
 
-	data,err := os.ReadFile(file)
+	O_file,err := os.Open(file)
 	if err != nil {
 		return nil,&config.FunctionFailError{
 			Cause: err.Error(),
 			Message: fmt.Sprintf(`Cannot read from the file : %s`,file),
 			ElapsedTime: time.Now(),
-			Provider: `unlocker.VerifyUnlock`,
+			Provider: `header.Header`,
 		}
 	}
 
-	header,_,err := config.ReadHeaderAndRest(data)
+	defer O_file.Close()
+	var data [42]byte = [42]byte{}
+	// Info : This reduces the overhead to read the whole file and then go forward
+	_,err = O_file.ReadAt(data[:],0)
 	if err != nil {
-		return nil,err
+		return nil,&config.FunctionFailError{
+			Cause: err.Error(),
+			Message: `Cannot Read from the data buffer to fill the header`,
+			ElapsedTime: time.Now(),
+			Provider: `header.Header`,
+		}
+	}
+
+	var header *config.Header = &config.Header{}
+
+	dataBuffer := bytes.NewBuffer(data[:])
+	err = binary.Read(dataBuffer,binary.BigEndian,header)
+	if err != nil {
+		return nil,&config.FunctionFailError{
+			Cause: err.Error(),
+			Message: `Cannot read to get the data into the header`,
+			ElapsedTime: time.Now(),
+			Provider: `header.Header`,
+		}
 	}
 
 	return header,nil
@@ -50,14 +73,14 @@ func GetUnlockedData(cfg *config.Config, rawData []byte) ([]byte, error) {
 			Cause: `Nil pointer dereference`,
 			Message: `A nil pointer of passed instead of a config pointer`,
 			ElapsedTime: time.Now(),
-			Provider: `unlocker.GetUnlockedData`,
+			Provider: `header.GetUnlockedData`,
 		}
-	case rawData == nil :
+	case  len(rawData) == 0:
 		return nil,&config.FunctionCancelError{
-			Cause: `Nil pointer dereference`,
-			Message: `A nil pointer of passed instead of a raw data pointer`,
+			Cause: `Empty Data set`,
+			Message: `A 0 lenght data slice is provided`,
 			ElapsedTime: time.Now(),
-			Provider: `unlocker.GetUnlockedData`,
+			Provider: `header.GetUnlockedData`,
 		}
 	}
 	
@@ -72,8 +95,8 @@ func GetUnlockedData(cfg *config.Config, rawData []byte) ([]byte, error) {
 	}
 
 	var sec *config.SharedEncryptionData = &config.SharedEncryptionData{
-		Salt:          header.Salt[:],
-		Nonce:         header.Nonce[:],
+		Salt:          header.Salt,
+		Nonce:         header.Nonce,
 		EncryptedData: encodeddata,
 	}
 

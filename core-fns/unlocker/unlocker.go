@@ -180,12 +180,12 @@ func Unlocker(cfg *config.Config) error {
 		msg := fmt.Sprintf(`
 				--- --- ---
 				Subject Name : %s
-				Folder Size : %d
+				Folder Size : %d B
 				Folder Material count : 1
 				Elapsed Time : %s
-				Average Speed : %.4f MB/seconds
+				Average Speed : %.4f B/seconds
 				--- --- ---
-			`,cfg.FolderName,foldersize,elapsedTime.String(),(float64(foldersize)/(1024 * 1024))/elapsedTime.Seconds())
+			`,cfg.FolderName,foldersize,elapsedTime.String(),(float64(foldersize))/elapsedTime.Seconds())
 		fmt.Println(msg)
 	}
 

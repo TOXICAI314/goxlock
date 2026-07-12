@@ -3,12 +3,13 @@ package mutex
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"path/filepath"
 
 	"golang.org/x/sys/windows"
 )
 
-// - FolderMutex 
+// - FolderMutex
 // Creates a mutex onto the folder that `goxlock` is currently working on
 type FolderMutex struct {
 	handle 	windows.Handle
@@ -24,12 +25,10 @@ func mutexname(folder string) (string,error) {
 		return ``,err
 	}
 
-	abs,err = filepath.EvalSymlinks(folder)
-	if err != nil {
-		// Info ; If not symlink then fall back to the folder
-		abs = folder
+	potabs,err := filepath.EvalSymlinks(abs)
+	if err == nil {
+		abs = potabs
 	}
-
 	hash := sha256.Sum256([]byte(abs))
 
 	return `Global\GoXLock_` + hex.EncodeToString(hash[:]),nil
@@ -56,8 +55,8 @@ func NewMutex(object string) (folderMutex *FolderMutex,alreadyexists bool,err er
 
 	handle,callErr := windows.CreateMutex(nil,false,ptr)
 	// Info : err is checked but also if its not what we want then it will get passed
-	if callErr != nil && callErr == windows.ERROR_ALREADY_EXISTS {
-		return nil,false,callErr
+	if handle == 0 {
+		return nil,false,fmt.Errorf(`An Internal Error occured while making the mutex %+v`,callErr)
 	}
 
 	folderMutex = &FolderMutex{

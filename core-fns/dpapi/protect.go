@@ -36,9 +36,9 @@ const (
 // Protect : Will encrypt the data that is given to it by the os level encryption
 func Protect(data []byte) ([]byte, error) {
 	// - Pre Safety Check 
-	if data == nil {
+	if len(data) == 0 {
 		return nil, &config.FunctionCancelError{
-			Cause:   `Data is nil`,
+			Cause:   `Data is empty`,
 			Message: `Cannot encypt the data because of its length`,
 			ElapsedTime: time.Now(),
 			Provider: `dpapi.Protect`,

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"goxlock/utils"
 	"os"
 	"path/filepath"
@@ -8,7 +9,28 @@ import (
 )
 
 // Version : The way that the data will be read in the future
-const Version float32 = 1.1
+const (
+	VersionMajor = 1
+	VersionMinor = 0
+	Patch        = 0
+	Revision      = 0
+	Release      = beta
+)
+
+var Version string = fmt.Sprintf(`%d.%d.%d.%d`, VersionMajor, VersionMinor, Patch, Revision)
+var VersionRelease string = fmt.Sprintf(`%s-%s`, Version, Release)
+
+// Release Verion and Path allocators
+const (
+	// Alpha = Needs testing and feture ammend (for testers)
+	alpha = `Alpha`
+	// Beta  = Done featuring but need testing
+	beta = `Beta`
+	// RC    = Everything is done and is going for last tests (can contain minor bugs) (early adopters)
+	RC = `Release Candidate`
+	// GA 	 = Available fopr 100% potential with no bugs
+	stable = `Stable`
+)
 
 // Name : The General name by which the app is running
 const Name string = `goxlock`
@@ -21,46 +43,46 @@ const Banner string = `
    	| |_| | |_| /  \  | | |___| |__| | |___| . \ 
 	 \____|\___/_/\_\ |_|_____|\____/ \____|_|\_\
 `
+
 // - Const Data
 const (
 	// ZipExt -> The extension by which a zip ext will be recognised
 	ZipExt string = `.zip`
 	// JsonExt -> The extension repr for the json
 	JsonExt string = `.json`
-	// LockExt -> The extension for the `goxlock` lock fiulke
+	// LockExt -> The extension for the `goxlock` lock file
 	LockExt string = `.g-lock`
 )
 
 // - User Action
 // - These are the actions that are allowed to the user
-// - Values are stored in thier corresponding `const`
+// - Values are stored in their corresponding `const`
 const (
-	LockFolder     int = 0001
-	UnlockFolder   int = 0002
-	RelockFolder   int = 0003
-	ChangePassword int = 0004
-	VerifyPassword int = 0005
-	HeaderCheck    int = 0006
+	LockFolder = iota + 1
+	UnlockFolder
+	RelockFolder
+	ChangePassword
+	VerifyPassword
+	HeaderCheck
 )
 
-// - Imp Var - //
+// - Imp Var 
 var (
-	// AppDataRoamingFolder -> The user config directory
-	AppDataRoamingFolder string
-	// GoxlockAppDataFolder -> A sub folder for the config dir where goxlock can store its data
-	GoxLockAppDataFolder string
+	// ConfigDir -> Gives the storage location where the application will store its data
+	ConfigDir			string
+	// GoxLockConfigDir -> A sub folder for the config dir where goxlock can store its data
+	GoxLockConfigDir string
 )
 
-// - init
-// init() will run first when this package is needed and will secure the importants details to the variables
+// init() 
+// will run first when this package is needed and will secure the importants details to the variables
 func init() {
 	var err error
-	AppDataRoamingFolder, err = os.UserConfigDir()
-	if err != nil || AppDataRoamingFolder == "" {
-		// Info : Fallback to environment variable if UserConfigDir fails
-		AppDataRoamingFolder = os.Getenv("APPDATA")
+	// Info : Intial Config Directory to the AppData folder
+	ConfigDir, err = os.UserConfigDir()
+	if err == nil{
+		GoxLockConfigDir = filepath.Join(ConfigDir,Name)	
 	}
-	GoxLockAppDataFolder = filepath.Join(AppDataRoamingFolder, Name)
 }
 
 // - Config
@@ -96,7 +118,7 @@ type ChangePasswordData struct {
 // Header : The base header data for the extension `glock`
 type Header struct {
 	Magic   [7]byte
-	Version [4]byte
+	Version [7]byte
 	Salt    [16]byte
 	Nonce   [12]byte
 }
@@ -113,13 +135,37 @@ func (cfg *Config) Structure() error {
 	if cfg.StartedAt.IsZero() {
 		cfg.StartedAt = time.Now()
 	}
+	// Vulnerability Checker for the filepath (no escaping quotes)
+	cfg.FolderName = filepath.Clean(cfg.FolderName)
+	cfg.OutputName = filepath.Clean(cfg.OutputName)
+	switch {
+	case !filepath.IsAbs(cfg.FolderName):
+		if !filepath.IsLocal(cfg.FolderName) {
+			return &FunctionCancelError{
+				Cause: `The Path have esaping quotes which are non local`,
+				Message: fmt.Sprintf(`The give path %s have quotes that are not allowed by the security`,cfg.FolderName),
+				ElapsedTime: time.Now(),
+				Provider: `config.Config.Structure`,
+			}
+		}
+	case !filepath.IsAbs(cfg.OutputName):
+		if !filepath.IsLocal(cfg.OutputName) {
+			return &FunctionCancelError{
+				Cause: `The Path have esaping quotes which are non local`,
+				Message: fmt.Sprintf(`The give path %s have quotes that are not allowed by the security`,cfg.OutputName),
+				ElapsedTime: time.Now(),
+				Provider: `config.Config.Structure`,
+			}
+		}
+	}
+
 	return nil
 }
 
 // - SharedEncryptionData
 // SharedEncryptionData : Is the data that is shared between memory so that other functions and data structure can use them
 type SharedEncryptionData struct {
-	Salt          []byte
-	Nonce         []byte
+	Salt          [16]byte
+	Nonce         [12]byte
 	EncryptedData []byte
 }

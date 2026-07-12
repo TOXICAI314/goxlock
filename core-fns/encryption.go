@@ -60,7 +60,15 @@ func EncryptFileWithHeader(cfg *config.Config) error {
 		return err
 	}
 	// Info : File pointer exhausted by read -> already EOF , hence direct writeFile
-	os.WriteFile(*file,packet,0700)
+	err = os.WriteFile(*file,packet,0700)
+	if err != nil {
+		return &config.FunctionFailError{
+			Cause: err.Error(),
+			Message: fmt.Sprintf(`The file write to the %s has failed`,*file),
+			ElapsedTime: time.Now(),
+			Provider: `croefns.EncryptFileWithHeader`,
+		}
+	}
 	return nil
 }
 
@@ -77,10 +85,10 @@ func Encrypt(data []byte, cfg *config.Config) (*config.SharedEncryptionData, err
 			ElapsedTime: time.Now(),
 			Provider: `corefns.Encrypt`,
 		}
-	case data == nil :
+	case len(data) == 0 :
 		return nil,&config.FunctionCancelError{
-			Cause: `Nil pointer reference`,
-			Message: `A nil pointer to the byte data has been passed`,
+			Cause: `Empty data set`,
+			Message: `A 0 length data slice is given to encrypt`,
 			ElapsedTime: time.Now(),
 			Provider: `corefns.Encrypt`,
 		}
@@ -152,8 +160,8 @@ func Encrypt(data []byte, cfg *config.Config) (*config.SharedEncryptionData, err
 	ciphertext := gcm.Seal(nil, nonce, data, nil)
 
 	return &config.SharedEncryptionData{
-		Salt:          salt,
-		Nonce:         nonce,
+		Salt:          [16]byte(salt),
+		Nonce:         [12]byte(nonce),
 		EncryptedData: ciphertext,
 	}, nil
 }
@@ -181,7 +189,7 @@ func Decrypt(sec *config.SharedEncryptionData,cfg *config.Config) ([]byte,error)
 
 	key := argon2.IDKey(
 		[]byte(cfg.Password),
-		sec.Salt,
+		sec.Salt[:],
 		1,
 		64*1024,
 		4,
@@ -209,7 +217,7 @@ func Decrypt(sec *config.SharedEncryptionData,cfg *config.Config) ([]byte,error)
 		}
 	}
 
-	plaindata,err := gcm.Open(nil,sec.Nonce,sec.EncryptedData,nil)
+	plaindata,err := gcm.Open(nil,sec.Nonce[:],sec.EncryptedData,nil)
 	if err != nil {
 		return nil,&config.FunctionFailError{
 			Cause: err.Error(),

@@ -35,7 +35,7 @@ func CreateShedule(sessionID string,instructions config.Instructions) error {
 		}
 	}
 
-	taskName := config.Name + sessionID
+	taskName := config.Name + "-" + sessionID
 
 	currentTime := time.Now()
 	runTime := currentTime.Add(instructions.Timeout)
@@ -49,7 +49,7 @@ func CreateShedule(sessionID string,instructions config.Instructions) error {
 	clock := runTime.Format(`15:04`)
 
 	exclusiontring := strings.Join(instructions.Exclusion, ",")
-	var args string = fmt.Sprintf(`--re-lock --session %s --exclude %s`, sessionID,exclusiontring)
+	var args string = fmt.Sprintf(`--re-lock --session "%s" --exclude "%s"`, sessionID,exclusiontring)
 
 	cmd := exec.Command(
 		"schtasks",

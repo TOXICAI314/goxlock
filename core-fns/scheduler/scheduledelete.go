@@ -21,7 +21,7 @@ func DeleteSchedule(sessionID string) error {
 		}
 	}
 
-    task := "GoxLock-" + sessionID
+    task := config.Name + "-" + sessionID
 
     cmd := exec.Command(
 

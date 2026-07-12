@@ -1,8 +1,10 @@
 package sessions
 
 import (
+	"fmt"
 	"goxlock/config"
 	"path/filepath"
+	"time"
 )
 
 // - Const -
@@ -11,24 +13,46 @@ const (
 	SessionsName = `sessions`
 )
 
-// - Imp vars 
+// - Imp vars
 var (
-	// Sessionfolder -> The app data folder for the session
-	Sessionfolder		 string
+	// SessionConfigDir -> The app data folder for the session
+	SessionConfigDir string
 )
 
-// - Session 
+// - Session
 // Is the struct that will record all the user important details to use them further when needed
 type Session struct {
-	Id 				string  				`json:"id"`
-	Folder			string					`json:"folder"`
-	Password 		[]byte					`json:"password"`
-	OutputName		string					`json:"outputname"`
-	InstructionData config.Instructions 	`json:"instructions"`
+	Id              string              `json:"id"`
+	Folder          string              `json:"folder"`
+	Password        []byte              `json:"password"`
+	OutputName      string              `json:"outputname"`
+	InstructionData config.Instructions `json:"instructions"`
 }
 
-// - init 
+// - init
 // will run first when this package is needed and will secure the importants details to the variables
 func init() {
-	Sessionfolder = filepath.Join(config.GoxLockAppDataFolder, SessionsName)
+	SessionConfigDir = filepath.Join(config.GoxLockConfigDir, SessionsName)
+}
+
+// SessionValidate
+// Validates the session data and its content
+func SessionValidate(id string) error {
+	if !filepath.IsAbs(SessionConfigDir) {
+		return &config.FunctionCancelError{
+			Cause:       `CWD session path`,
+			Message:     fmt.Sprintf(`Cannot get the AppdataRoaming path -> Got a cwd path %s`, SessionConfigDir),
+			ElapsedTime: time.Now(),
+			Provider:    `session.Session.Validate`,
+		}
+	}
+	if id == `` {
+		return &config.FunctionCancelError{
+			Cause:       `Empty id string`,
+			Message:     `Given an empty id to work by`,
+			ElapsedTime: time.Now(),
+			Provider:    `session.Session.Validate`,
+		}
+	}
+	return nil
 }

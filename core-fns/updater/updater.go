@@ -36,8 +36,11 @@ type Asset struct {
 func CheckForUpdate() error {
 	// Info : The safe url for goxlock latest release
 	// url -> download url -> download
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
 	url := `https://api.github.com/repos/TOXICAI314/goxlock/releases/latest`
-	resp,err := http.Get(url)
+	resp,err := client.Get(url)
 	if err != nil {
 		return &config.FunctionFailError{
 			Cause: err.Error(),
@@ -77,8 +80,8 @@ func CheckForUpdate() error {
 		}
 	}
 
-	if release.TagName == fmt.Sprintf(`v%.1f`,config.Version) {
-		fmt.Printf(`Already the latest verison of the app installed - %.1f`,config.Version)
+	if release.TagName == config.Version {
+		fmt.Printf(`Already the latest verison of the app installed - %s`,config.Version)
 		return nil
 	}
 
@@ -116,7 +119,7 @@ func CheckForUpdate() error {
 			}
 		}
 		defer exedresp.Body.Close()
-		if resp.StatusCode != http.StatusOK {
+		if exedresp.StatusCode != http.StatusOK {
 			return &config.FunctionCancelError{
 				Cause: `Expected an ok status code`,
 				Message: fmt.Sprintf(`Expected a 200 status code , got - %d`,resp.StatusCode),
@@ -174,9 +177,9 @@ func CheckForUpdate() error {
 	}
 
 	cmd := exec.Command(
-				permittedTempFile.Name(),
-				"/VERYSILENT",
-				"/SUPPRESSMSGBOXES",
+				"cmd", 
+				"/c", 
+				"timeout /t 5 /nobreak > NUL && "+permittedTempFile.Name(),
 				"/NORESTART",
 			)
 	err = cmd.Start()
@@ -188,6 +191,7 @@ func CheckForUpdate() error {
 			Provider: `unlocker.CheckUpdates`,
 		}
 	}
-	fmt.Println(`Exitting the Program to redownload the application`)
+	fmt.Printf("Exitting the Program to redownload the application\nThe download will start after 5 sec .")
+	os.Exit(0)
 	return nil
 }

@@ -4,22 +4,15 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"io"
-	"math"
 	"time"
 )
 
-// - CreateHeader()
+// - CreateHeader
 // CreateHeader : makes a header based on the Shared Encrypted data
 func CreateHeader(end *SharedEncryptionData) *Header {
-
-	// -- Version -- //
-	versionbytes := [4]byte{}
-	binary.LittleEndian.PutUint32(versionbytes[:],math.Float32bits(Version))
-
 	return &Header{
 		Magic: [7]byte([]byte(Name)),
-		Version: versionbytes,
+		Version: [7]byte([]byte(Version)),
 		Salt: [16]byte(end.Salt),
 		Nonce: [12]byte(end.Nonce),
 	}
@@ -45,8 +38,8 @@ func CreatePacket(hd *Header,end *SharedEncryptionData) ([]byte,error) {
 		}
 	}
 
-	// Info : 39 is for the header -> See the data structure
-	totalSize := 39	+ len(end.EncryptedData)
+	// Info : 42 is for the header -> See the data structure
+	totalSize := 42	+ len(end.EncryptedData)
 	packet := make([]byte, 0, totalSize)
 
 	packet = append(packet, hd.Magic[:]...)
@@ -61,73 +54,45 @@ func CreatePacket(hd *Header,end *SharedEncryptionData) ([]byte,error) {
 // - ReadHeader
 // ReadHeader : Reads the valid `glock` header
 func ReadHeaderAndRest(data []byte) (*Header,[]byte,error) {
-	if data == nil {
+	if len(data) == 0 {
 		return nil,nil,&FunctionFailError{
-			Cause: `Nil pointer reference`,
-			Message: `The given data pointer is pointing to nil`,
+			Cause: `Empty Data`,
+			Message: `The given data length is zero`,
 			Provider: `config.ReadHeaderAndRest`,
 			ElapsedTime: time.Now(),
 		}
 	}
 
-	mainbuffer := bytes.NewBuffer(data)
-	
-	// - Reading 
-	name := make([]byte,7)
-	_,err := io.ReadFull(mainbuffer,name)
+	dataReader := bytes.NewBuffer(data)
+	var header *Header = &Header{}
+
+	// Info : binary.Read reads the binary into already defied structure (as the structure of the Header is already defined in bytes)
+	err := binary.Read(dataReader,binary.BigEndian,header)
 	if err != nil {
 		return nil,nil,&FunctionFailError{
 			Cause: err.Error(),
-			Message: `Cannot read from the main buffer to the name storing buffer`,
+			Message: `Cannot store the header data into the Header struct`,
 			ElapsedTime: time.Now(),
 			Provider: `config.ReadHeaderAndRest`,
 		}
 	}
 
-	version := make([]byte,4)
-	_,err = io.ReadFull(mainbuffer,version)
-	if err != nil {
-		return nil,nil,&FunctionFailError{
-			Cause: err.Error(),
-			Message: `Cannot read from the main buffer to the version storing buffer`,
-			ElapsedTime: time.Now(),
-			Provider: `config.ReadHeaderAndRest`,
-		}
-	}
-
-	salt := make([]byte,16)
-	_,err = io.ReadFull(mainbuffer,salt)
-	if err != nil {
-		return nil,nil,&FunctionFailError{
-			Cause: err.Error(),
-			Message: `Cannot read from the main buffer to the salt storing buffer`,
-			ElapsedTime: time.Now(),
-			Provider: `config.ReadHeaderAndRest`,
-		}
-	}
-
-	nonce := make([]byte,12)
-	_,err = io.ReadFull(mainbuffer,nonce)
-	if err != nil {
-		return nil,nil,&FunctionFailError{
-			Cause: err.Error(),
-			Message: `Cannot read from the main buffer to the nonce storing buffer`,
-			ElapsedTime: time.Now(),
-			Provider: `config.ReadHeaderAndRest`,
-		}
-	}
-
-	return &Header{
-		Magic: [7]byte(name),
-		Version: [4]byte(version),
-		Salt: [16]byte(salt),
-		Nonce: [12]byte(nonce),
-	},mainbuffer.Bytes(),nil
+	// Info : And the rest of the data will be read (as the Reader pointer has been shifted)
+	return header,dataReader.Bytes(),nil
 }
 
 // - ValidateHeader 
 // ValidateHeader : Gives a forward walking rights to the header if it is correct
 func ValidateHeader(hd *Header) error {
+	// PreSafety
+	if hd == nil {
+		return &FunctionFailError{
+			Cause: `Nil pointer reference`,
+			Message: `The given header pointer is pointing to nil`,
+			Provider: `config.ValidateHeader`,
+			ElapsedTime: time.Now(),
+		}
+	}
 	// - Name 
 	name := string(hd.Magic[:])
 	if name != Name {
@@ -138,18 +103,5 @@ func ValidateHeader(hd *Header) error {
 			Provider: `config.ValidateHeader`,
 		}
 	}
-
-	// - Version 
-	// Info : must be a valid version number to actually run
-	v := math.Float32frombits(binary.LittleEndian.Uint32(hd.Version[:]))
-	if v < 1.0 {
-		return &FunctionCancelError{
-			Cause: `Invalid Version Number`,
-			Message: fmt.Sprintf(`Version is not whats intended : %.2f != (>= 1.0)`,v),
-			ElapsedTime: time.Now(),
-			Provider: `config.ValidateHeader`,
-		}
-	}
-
 	return nil
 }

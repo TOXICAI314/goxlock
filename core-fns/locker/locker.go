@@ -121,19 +121,30 @@ func Locker(cfg *config.Config) error {
 	// Info :  This is just done to save the efficiency of the logger
 	// `if logger.Allowed` is used for the efficiency
 	if cfg.InstructData.Stats {
-		foldersize := stats.Size()
-		dirdata,_ := os.ReadDir(cfg.FolderName)
+		var count int 
+		var foldersize int64
+		err = filepath.Walk(cfg.FolderName,func(path string, info os.FileInfo, err error) error {
+			if err != nil || info == nil {
+				return nil
+			}
+			if info.IsDir() {
+				return nil
+			}
+			foldersize += info.Size()
+			count++
+			return nil
+		})
 		elapsedTime := time.Since(benchmarktimestart)
 		
 		msg := fmt.Sprintf(`
 				--- --- ---
 				Subject Name : %s
-				Folder Size : %d
+				Folder Size : %d B
 				Folder Material count : %d
 				Elapsed Time : %s
-				Average Speed : %.4f MB/seconds
+				Average Speed : %.4f B/seconds
 				--- --- ---
-			`,cfg.FolderName,foldersize,len(dirdata),elapsedTime.String(),(float64(foldersize)/(1024 * 1024))/elapsedTime.Seconds())
+			`,cfg.FolderName,foldersize,count,elapsedTime.String(),(float64(foldersize))/elapsedTime.Seconds())
 		fmt.Println(msg)
 	}
 

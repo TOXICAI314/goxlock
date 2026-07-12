@@ -13,7 +13,7 @@ import (
 // - Vars
 var (
 	LoggerName        string = `logs`
-	LoggerApddataPath string = filepath.Join(config.GoxLockAppDataFolder, LoggerName)
+	LoggerConfigDir string = filepath.Join(config.GoxLockConfigDir, LoggerName)
 	Loggerpattern     string = `goxlock-log-%s` + config.JsonExt
 )
 
@@ -116,19 +116,19 @@ func Log(cfg *config.Config, errEncountered error) (*Logger, error) {
 	} 
 
 	// - Pre Safety
-	if !filepath.IsAbs(LoggerApddataPath) {
+	if !filepath.IsAbs(LoggerConfigDir) {
 		return nil, &config.FunctionCancelError{
 			Cause:   `Cwd Folder Detected`,
-			Message: fmt.Sprintf(`The folder path is a local path not absolute path : %s`,LoggerApddataPath),
+			Message: fmt.Sprintf(`The folder path is a local path not absolute path : %s`,LoggerConfigDir),
 			ElapsedTime: time.Now(),
 			Provider: `logger.Log`,
 		}
 	}
-	errx := os.MkdirAll(LoggerApddataPath, 0700)
+	errx := os.MkdirAll(LoggerConfigDir, 0700)
 	if errx != nil {
 		return nil, &config.FunctionFailError{
 			Cause:   errx.Error(),
-			Message: fmt.Sprintf(`Cannot Create the folder that is needed to store the logs : %s`,LoggerApddataPath),
+			Message: fmt.Sprintf(`Cannot Create the folder that is needed to store the logs : %s`,LoggerConfigDir),
 			ElapsedTime: time.Now(),
 			Provider: `logger.Log`,
 		}
@@ -136,7 +136,7 @@ func Log(cfg *config.Config, errEncountered error) (*Logger, error) {
 
 	currenttime := time.Now()
 	formattedtime := currenttime.Format(`02-01-2006`)
-	accessingFile := filepath.Join(LoggerApddataPath, fmt.Sprintf(Loggerpattern, formattedtime))
+	accessingFile := filepath.Join(LoggerConfigDir, fmt.Sprintf(Loggerpattern, formattedtime))
 
 	file,errx := os.OpenFile(accessingFile,os.O_CREATE|os.O_RDWR,0700)
 	if errx != nil {
@@ -177,20 +177,20 @@ func Log(cfg *config.Config, errEncountered error) (*Logger, error) {
 // This Reads the log file and returns the Logger that is needed 
 func ReadLogFile(formattedTime string) (*Logger,error) {
 	// - Pre Safety
-	if !filepath.IsAbs(LoggerApddataPath) {
+	if !filepath.IsAbs(LoggerConfigDir) {
 		return nil, &config.FunctionCancelError{
 			Cause:   `Cwd Folder Detected`,
-			Message: fmt.Sprintf(`The folder path is a local path not absolute path : %s`,LoggerApddataPath),
+			Message: fmt.Sprintf(`The folder path is a local path not absolute path : %s`,LoggerConfigDir),
 			ElapsedTime: time.Now(),
 			Provider: `logger.ReadLogFile`,
 		}
 
 	}
-	err := os.MkdirAll(LoggerApddataPath, 0700)
+	err := os.MkdirAll(LoggerConfigDir, 0700)
 	if err != nil {
 		return nil, &config.FunctionFailError{
 			Cause:   err.Error(),
-			Message: fmt.Sprintf(`Cannot Create the folder that is needed to store the logs : %s`,LoggerApddataPath),
+			Message: fmt.Sprintf(`Cannot Create the folder that is needed to store the logs : %s`,LoggerConfigDir),
 			ElapsedTime: time.Now(),
 			Provider: `logger.ReadLogFile`,
 		}
@@ -205,7 +205,7 @@ func ReadLogFile(formattedTime string) (*Logger,error) {
 		}
 	}
 
-	accessingFile := filepath.Join(LoggerApddataPath, fmt.Sprintf(Loggerpattern, formattedTime))
+	accessingFile := filepath.Join(LoggerConfigDir, fmt.Sprintf(Loggerpattern, formattedTime))
 	data,err := os.ReadFile(accessingFile)
 	if err != nil {
 		return nil,&config.FunctionFailError{

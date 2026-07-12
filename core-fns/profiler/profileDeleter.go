@@ -3,6 +3,7 @@ package profiler
 import (
 	"fmt"
 	"goxlock/config"
+	"goxlock/core-fns/mutex"
 	"os"
 	"path/filepath"
 	"time"
@@ -12,31 +13,38 @@ import (
 // Will Delete the profile if user want it so
 func (pf *Profiler) Delete() error {
 	// - Pre Safety
-	if !filepath.IsAbs(ProfilerAppDataPath) {
-		return &config.FunctionFailError{
-			Cause: `Cwd folder detected`,
-			Message: fmt.Sprintf(`Absoulte folder needed for storing the Profile : %s`,ProfilerAppDataPath),
-			ElapsedTime: time.Now(),
-			Provider: `profiler.Profiler.Delete`,
-		}
+	if err := pf.Validate();err != nil {
+		return err
 	}
-	err := os.MkdirAll(ProfilerAppDataPath, 0700)
+
+	profileFile := filepath.Join(ProfilerConfigDir, fmt.Sprintf(ProfilePattern, config.Name, pf.Name))
+	mut, alrexist, err := mutex.NewMutex(profileFile)
 	if err != nil {
 		return &config.FunctionFailError{
 			Cause:   err.Error(),
-			Message: fmt.Sprintf(`Cannot make a folder to store the profile : %s`,ProfilerAppDataPath),
+			Message: fmt.Sprintf(`An internal error has occured while Creating the Mutex for the given folder : %s`,profileFile),
 			ElapsedTime: time.Now(),
 			Provider: `profiler.Profiler.Delete`,
 		}
 	}
-	if pf.Name == `` {
+	defer mut.CloseMutex()
+	if alrexist {
 		return &config.FunctionCancelError{
-			Cause:   `Invalid profile name`,
-			Message: `Provide a Valid name to be taken for the profile`,
+			Cause:   `Mutex already exist`,
+			Message: fmt.Sprintf(`The mutex of the given folder %s is already there`, profileFile),
 			ElapsedTime: time.Now(),
 			Provider: `profiler.Profiler.Delete`,
 		}
 	}
-	
-	return os.Remove(filepath.Join(ProfilerAppDataPath, fmt.Sprintf(ProfilePattern, config.Name, pf.Name)))
+
+	err = os.Remove(profileFile)
+	if err != nil {
+		return &config.FunctionFailError{
+			Cause: err.Error(),
+			Message: fmt.Sprintf(`Cannot delete the given profile file : %s`,profileFile),
+			ElapsedTime: time.Now(),
+			Provider: `profiler.Profiler.Delete`,
+		}
+	}
+	return nil
 }

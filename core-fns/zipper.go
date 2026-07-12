@@ -73,6 +73,11 @@ func Zip(cfg *config.Config) error {
 		if info.IsDir() {
 			return nil
 		}
+		// Info : This will now will never attach to a symlink.
+		// As symlink can cause recursion : To infite || to sensitive files 
+		if info.Mode()&os.ModeSymlink != 0 {
+			return nil
+		}
 		// - Exclusion 
 		for _,exdExt := range cfg.InstructData.Exclusion {
 			if ok,_ := filepath.Match(exdExt,filepath.Base(relPath));ok {
@@ -147,10 +152,10 @@ func Zip(cfg *config.Config) error {
 func Unzip(cfg *config.Config,data []byte) error {
 	// - Pre Saefety
 	switch {
-	case data == nil:
+	case len(data) == 0:
 		return &config.FunctionCancelError{
-			Cause: `Nil pointer dereference`,
-			Message: `A nil pointer of passed instead of a data slice pointer`,
+			Cause: `Empty Data set`,
+			Message: `A 0 length data slice is passed instead of actual data`,
 			ElapsedTime: time.Now(),
 			Provider: `corefns.Unzip`,
 		}

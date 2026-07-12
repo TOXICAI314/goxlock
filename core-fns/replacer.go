@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"goxlock/config"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -42,8 +43,19 @@ func ReplaceZipwithGLock(cfg *config.Config) error {
 		}
 	}
 
-	// - Replace
+	// Replace
 	if cfg.InstructData.DeleteOriginal {
+		// Info : Even though of `--unsafe` the code will not touch the volume it is running
+		*target = filepath.Clean(*target)
+		volume := filepath.VolumeName(*target)
+		if *target == `/` || *target == volume+`\` || *target == volume  {
+			return &config.FunctionCancelError{
+				Cause: `The Zipping path is the volume name`,
+				Message: fmt.Sprintf(`The %s is not allwoed by the system to be deleted even after the use of '--unsafe'`,*target),
+				ElapsedTime: time.Now(),
+				Provider: `corefns.ReplaceZipWithGlock`,
+			}
+		}
 		err := os.RemoveAll(*target)
 		if err != nil {
 			return err

@@ -21,7 +21,7 @@ var (
 func Unprotect(data []byte) ([]byte, error) {
 
 	// - Pre safety - //
-	if data == nil {
+	if len(data) == 0 {
 		return nil, nil
 	}
 
