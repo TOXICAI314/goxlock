@@ -40,7 +40,7 @@ type ConfiguredConfigData struct {
 }
 
 // Prints the data as normal but in the given destination and Permission
-func (lg *Logger) Write() error {
+func (lg *Logger) Write() (err error) {
 	// - Mutex
 	mutex, exists, err := mutex.NewMutex(lg.Place)
 	if err != nil {
@@ -51,7 +51,12 @@ func (lg *Logger) Write() error {
 			ElapsedTime:  time.Now(),
 		}
 	}
-	defer mutex.CloseMutex()
+	defer func() {
+		closeErr := mutex.CloseMutex()
+		if closeErr != nil && err == nil {
+			err = closeErr
+		}
+	}()
 	if exists {
 		return &config.FunctionCancelError{
 			Cause:   `Mutex already exist`,

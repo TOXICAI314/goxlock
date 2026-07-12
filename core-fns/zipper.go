@@ -13,7 +13,7 @@ import (
 )
 
 // commit zip onto the given folder but preserving the tree structure
-func Zip(cfg *config.Config) error {
+func Zip(cfg *config.Config) (err error) {
 	if cfg == nil {
 		return &config.FunctionCancelError{
 			Cause: `Nil pointer dereference`,
@@ -27,7 +27,7 @@ func Zip(cfg *config.Config) error {
 	folder := &cfg.FolderName
 
 	// Pre Safety 
-	if _,err := os.Stat(*folder);err != nil {
+	if _,err = os.Stat(*folder);err != nil {
 		return &config.FunctionFailError{
 			Cause: err.Error(),
 			Message: fmt.Sprintf(`The folder given %s is not a valid path`,err),
@@ -46,19 +46,41 @@ func Zip(cfg *config.Config) error {
 			Provider: `corefns.Zip`,
 		}
 	}
-	defer zipFile.Close()
+	defer func() {
+		closeErr := zipFile.Close()
+		// Info : This focuses on the more priotized error message of the original returner instead of the closing
+		if closeErr != nil && err == nil {
+			err = &config.FunctionFailError{
+				Cause: closeErr.Error(),
+				Message: fmt.Sprintf(`Error while closing the opened file - %s`,*zipName),
+				ElapsedTime: time.Now(),
+				Provider: `corefns.Zip`,
+			}
+		}
+	}()
 	zipWriter := zip.NewWriter(zipFile)
-	defer zipWriter.Close()
+	defer func () {
+		closeErr := zipWriter.Close()
+		// Info : This focuses on the more priotized error message of the original returner instead of the closing
+		if closeErr != nil && err == nil {
+			err = &config.FunctionFailError{
+				Cause: closeErr.Error(),
+				Message: fmt.Sprintf(`Error while closing the opened writer - %s`,*zipName),
+				ElapsedTime: time.Now(),
+				Provider: `corefns.Zip`,
+			}
+		}	
+	}()
 	// Walk :
 	// - Walking down the whole tree structure and counting on every file or folder beneathe
 	// - Memory intensive payload
-	err = filepath.Walk(*folder,func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(*folder,func(path string, info os.FileInfo, err_x error) error {
 		relPath,err := filepath.Rel(*folder,path)
 		// Info : `return nil` for continuing the recursion even if something fails
 		// - For folder : `relPath` will handle the tree structuring
-		if err != nil {
+		if err_x != nil {
 			err = &config.FunctionFailError{
-				Cause: err.Error(),
+				Cause: err_x.Error(),
 				Message: fmt.Sprintf(`Defect in walk by %s`,relPath),
 				ElapsedTime: time.Now(),
 				Provider: `corefns.Zip`,
@@ -137,7 +159,7 @@ func Zip(cfg *config.Config) error {
 	if err != nil {
 		return &config.FunctionFailError{
 			Cause: err.Error(),
-			Message : `Cannot zip the given folder structure`,
+			Message : `Problem zipping the given folder structure`,
 			ElapsedTime: time.Now(),
 			Provider: `corefns.Zip`,
 		}

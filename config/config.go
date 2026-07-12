@@ -12,7 +12,7 @@ import (
 const (
 	VersionMajor = 1
 	VersionMinor = 0
-	Patch        = 1
+	Patch        = 2
 	Release      = beta
 )
 

@@ -11,7 +11,7 @@ import (
 
 // A scheduled action that will relock the given folder as user commands
 // It dont need config upport as it can read it own data forming `Session`
-func Relocker(sessionId string) error {
+func Relocker(sessionId string) (err error) {
 	if sessionId == `` {
 		return &config.FunctionCancelError{
 			Cause: `Empty id string`,
@@ -33,8 +33,18 @@ func Relocker(sessionId string) error {
 
 	stringPassword := string(password)
 
-	defer sessions.Delete(sessionId)
-	defer scheduler.DeleteSchedule(sessionId)
+	defer func ()  {
+		delErr := sessions.Delete(sessionId)
+		if delErr != nil && err == nil {
+			err = delErr
+		} 
+	}()
+	defer func ()  {
+		delErr := scheduler.DeleteSchedule(sessionId)
+		if delErr != nil && err == nil {
+			err = delErr
+		} 
+	}()
 	// Config construct 
 	// This will reconstruct config to use `locker/locker.go` 
 	// [Maybe my first time writting like this in this codebase but i aint writting whole another logic for relock]

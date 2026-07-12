@@ -85,7 +85,12 @@ func Unlocker(cfg *config.Config) error {
 			Provider: `unlocker.Unlocker`,
 		}
 	}
-	defer mut.CloseMutex()
+	defer func() {
+		closeErr := mut.CloseMutex()
+		if closeErr != nil && err == nil {
+			err = closeErr
+		}
+	}()
 	if alrexist {
 		return &config.FunctionCancelError{
 			Cause:   `Mutex already exist`,

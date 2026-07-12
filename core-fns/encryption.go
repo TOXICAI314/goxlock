@@ -15,7 +15,7 @@ import (
 )
 
 // EncryptFileWithHeader : Encrypts the file info the undetectable form for user privacy that can only be breached by giving correct password
-func EncryptFileWithHeader(cfg *config.Config) error {
+func EncryptFileWithHeader(cfg *config.Config) (err error) {
 	if cfg == nil {
 		return &config.FunctionCancelError{
 			Cause: `Nil pointer reference`,
@@ -36,7 +36,18 @@ func EncryptFileWithHeader(cfg *config.Config) error {
 			Provider: `corefns.EncryptFileWithHeader`,
 		}
 	}
-	defer openfile.Close()
+	defer func() {
+		closeErr := openfile.Close()
+		// Info : This focuses on the more priotized error message of the original returner instead of the closing
+		if closeErr != nil && err == nil {
+			err = &config.FunctionFailError{
+				Cause: closeErr.Error(),
+				Message: fmt.Sprintf(`Error while closing the opened file - %s`,*file),
+				ElapsedTime: time.Now(),
+				Provider: `corefns.EncryptFileWithHeader`,
+			}
+		}
+	}()
 	data, err := io.ReadAll(openfile)
 	if err != nil {
 		return &config.FunctionFailError{
@@ -58,8 +69,17 @@ func EncryptFileWithHeader(cfg *config.Config) error {
 	if err != nil {
 		return err
 	}
-	// Info : File pointer exhausted by read -> already EOF , hence direct writeFile
-	err = os.WriteFile(*file,packet,0700)
+
+	_,err = openfile.Seek(0,0)
+	if err != nil {
+		return &config.FunctionFailError{
+			Cause: err.Error(),
+			Message: fmt.Sprintf(`Cannot seek to the value of 0,0 of the opened file - %s`,*file),
+			ElapsedTime: time.Now(),
+			Provider: `corefns.EncryptFileWithHeader`,
+		}
+	}
+	_,err = openfile.Write(packet)
 	if err != nil {
 		return &config.FunctionFailError{
 			Cause: err.Error(),

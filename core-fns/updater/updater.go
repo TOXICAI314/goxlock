@@ -30,7 +30,7 @@ type Asset struct {
 }
 
 // This will check for update from trusted sources
-func CheckForUpdate() error {
+func CheckForUpdate() (err error) {
 	// Info : The safe url for goxlock latest release
 	// url -> download url -> download
 	client := &http.Client{
@@ -46,7 +46,12 @@ func CheckForUpdate() error {
 			Provider: `unlocker.CheckUpdates`,
 		}
 	}
-	defer resp.Body.Close()
+	defer func ()  {
+		closErr := resp.Body.Close()
+		if closErr != nil && err == nil {
+			err = closErr
+		}
+	}()
 	if resp.StatusCode != http.StatusOK {
 		return &config.FunctionCancelError{
 			Cause: `Expected an ok status code`,
@@ -115,7 +120,12 @@ func CheckForUpdate() error {
 				Provider: `unlocker.CheckUpdates`,
 			}
 		}
-		defer exedresp.Body.Close()
+		defer func ()  {
+			closErr := exedresp.Body.Close()
+			if closErr != nil && err == nil {
+				err = closErr
+			}
+		}()
 		if exedresp.StatusCode != http.StatusOK {
 			return &config.FunctionCancelError{
 				Cause: `Expected an ok status code`,

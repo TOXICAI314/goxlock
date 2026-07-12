@@ -12,7 +12,7 @@ import (
 )
 
 // Gives the raw header of the `g-lock` file
-func Header(file string) (*config.Header,error) {
+func Header(file string) (header *config.Header,err error) {
 	// - Pre Safety
 	if ext := filepath.Ext(file);ext != config.LockExt {
 		return nil,&config.FunctionFailError{
@@ -23,6 +23,7 @@ func Header(file string) (*config.Header,error) {
 		}
 	}
 
+	header = &config.Header{}
 	O_file,err := os.Open(file)
 	if err != nil {
 		return nil,&config.FunctionFailError{
@@ -33,7 +34,17 @@ func Header(file string) (*config.Header,error) {
 		}
 	}
 
-	defer O_file.Close()
+	defer func() {
+		closeErr := O_file.Close()
+		if closeErr != nil && err == nil {
+			err = &config.FunctionFailError{
+				Cause: closeErr.Error(),
+				Message: fmt.Sprintf(`The file Cannot be closed - %s`,file),
+				ElapsedTime: time.Now(),
+				Provider: `header.Header`,
+			}
+		}
+	}()
 	var data [40]byte = [40]byte{}
 	// Info : This reduces the overhead to read the whole file and then go forward
 	_,err = O_file.ReadAt(data[:],0)
@@ -45,8 +56,6 @@ func Header(file string) (*config.Header,error) {
 			Provider: `header.Header`,
 		}
 	}
-
-	var header *config.Header = &config.Header{}
 
 	dataBuffer := bytes.NewBuffer(data[:])
 	err = binary.Read(dataBuffer,binary.BigEndian,header)

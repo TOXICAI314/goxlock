@@ -14,7 +14,7 @@ import (
 
 // Will the lock the file in its `.g-lock` via encryption of the data
 // Once the data has been encrypted the only way to decrypt is via the password and nothing else
-func Locker(cfg *config.Config) error {
+func Locker(cfg *config.Config) (err error) {
 
 	if cfg == nil {
 		return &config.FunctionCancelError{
@@ -79,7 +79,12 @@ func Locker(cfg *config.Config) error {
 			Message: fmt.Sprintf(`An internal error has occured while Creating the Mutex for the given folder - %s`,cfg.FolderName),
 		}
 	}
-	defer mut.CloseMutex()
+	defer func() {
+		closeErr := mut.CloseMutex()
+		if closeErr != nil && err == nil {
+			err = closeErr
+		}
+	}()
 	if alrexist {
 		return &config.FunctionCancelError{
 			Cause:   `Mutex already exist`,

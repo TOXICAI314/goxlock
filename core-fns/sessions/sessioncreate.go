@@ -11,7 +11,7 @@ import (
 )
 
 // Makes the session to its Program files and saves the data for further use cases
-func (s *Session) CreateSession() error {
+func (s *Session) CreateSession() (err error) {
 
 	// Pre Safety Run
 	if !filepath.IsAbs(SessionConfigDir) {
@@ -22,7 +22,7 @@ func (s *Session) CreateSession() error {
 			Provider:    `session.Session.CreateSession`,
 		}
 	}
-	err := os.MkdirAll(SessionConfigDir, 0700)
+	err = os.MkdirAll(SessionConfigDir, 0700)
 	if err != nil {
 		return &config.FunctionFailError{
 			Cause:       err.Error(),
@@ -53,7 +53,12 @@ func (s *Session) CreateSession() error {
 			Provider:    `session.Session.CreateSession`,
 		}
 	}
-	defer mutex.CloseMutex()
+	defer func() {
+		closeErr := mutex.CloseMutex()
+		if closeErr != nil && err == nil {
+			err = closeErr
+		}
+	}()
 	if exists {
 		return &config.FunctionCancelError{
 			Cause:       `Mutex already exist`,

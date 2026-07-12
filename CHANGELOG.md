@@ -1,6 +1,6 @@
 # UPDATE INFO
 
-Following are the changes made in the `v1.0.1-Beta` update:
+Following are the changes made in the `v1.0.2-Beta` update:
 
 ## Fixed Bugs 
 
@@ -30,6 +30,8 @@ Following are the changes made in the `v1.0.1-Beta` update:
 
 - The client will never end even if no response comes to it for a long period.
 
+- `defer` calls not contributing to the error significance.
+
 ## Design Improvement
 
 - Made the error message better -> Classified in two factors : FunctionCacelError (for self killing) & FucntionFailError (killed by an error).
@@ -53,6 +55,8 @@ Following are the changes made in the `v1.0.1-Beta` update:
 - `ReplaceFolderwithGlock` cant delete the volume name even if it is prompted to by `--unsafe`
 
 - Added a delay to the Updater so that it gets a valid time to react.
+
+- Named returned to defer blocks.
 
 ## Delayed Updates
 

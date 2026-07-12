@@ -10,7 +10,7 @@ import (
 )
 
 // Delete : deletes the given session with the given id
-func Delete(id string) error {
+func Delete(id string) (err error) {
 
 	// Pre safety
 	if err := SessionValidate(id);err != nil {
@@ -27,7 +27,12 @@ func Delete(id string) error {
 			Provider: `unlocker.Unlocker`,
 		}
 	}
-	defer mut.CloseMutex()
+	defer func() {
+		closeErr := mut.CloseMutex()
+		if closeErr != nil && err == nil {
+			err = closeErr
+		}
+	}()
 	if alrexist {
 		return &config.FunctionCancelError{
 			Cause:   `Mutex already exist`,

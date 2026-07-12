@@ -13,7 +13,7 @@ import (
 // Create
 // Is a function that Creates the Profile from Profiler
 // This Profile struct is then dumped into the %APPDATA%/Roaming/name of the application
-func (pf *Profiler) Create() error {
+func (pf *Profiler) Create() (err error) {
 	// Pre Safety
 	if err := pf.Validate();err != nil {
 		return err
@@ -38,7 +38,12 @@ func (pf *Profiler) Create() error {
 			Provider:    `profiler.Profile.Create`,
 		}
 	}
-	defer mutex.CloseMutex()
+	defer func() {
+		closeErr := mutex.CloseMutex()
+		if closeErr != nil && err == nil {
+			err = closeErr
+		}
+	}()
 	if exists {
 		return &config.FunctionCancelError{
 			Cause:       `Mutex already exist`,

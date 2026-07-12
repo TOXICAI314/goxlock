@@ -15,7 +15,7 @@ import (
 )
 
 // Will translate user `int` action instructions -> Performable sections
-func PerformAction(cfg *config.Config) error {
+func PerformAction(cfg *config.Config) (err error) {
 	// Pre Safety 
 	if cfg == nil {
 		return &config.FunctionCancelError{
@@ -25,16 +25,20 @@ func PerformAction(cfg *config.Config) error {
 			Provider: `performer.PerformAction`,
 		}
 	} 
-
-	var err error  
-
+ 
 	defer func() {
 		// Logger Entry
 		// Logger logs here to put the end results
 		if cfg.InstructData.LoggerAllowed {
 			var loggerx *logger.Logger
-			loggerx,_ = logger.Log(cfg,err)
-			loggerx.Write()
+			loggerx,logerr := logger.Log(cfg,err)
+			if logerr != nil && err == nil {
+				err = logerr
+			}
+			logerr = loggerx.Write()
+			if logerr != nil && err == nil {
+				err = logerr
+			}
 		}
 	}()
 

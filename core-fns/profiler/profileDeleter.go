@@ -11,7 +11,7 @@ import (
 
 // DeleteProfiler
 // Will Delete the profile if user want it so
-func (pf *Profiler) Delete() error {
+func (pf *Profiler) Delete() (err error) {
 	// Pre Safety
 	if err := pf.Validate();err != nil {
 		return err
@@ -27,7 +27,12 @@ func (pf *Profiler) Delete() error {
 			Provider: `profiler.Profiler.Delete`,
 		}
 	}
-	defer mut.CloseMutex()
+	defer func() {
+		closeErr := mut.CloseMutex()
+		if closeErr != nil && err == nil {
+			err = closeErr
+		}
+	}()
 	if alrexist {
 		return &config.FunctionCancelError{
 			Cause:   `Mutex already exist`,

@@ -16,7 +16,7 @@ var (
 )
 
 // Makes the data in raw byte format (readable string bytes)
-func Unprotect(data []byte) ([]byte, error) {
+func Unprotect(data []byte) (retData []byte, err error) {
 
 	// Pre safety 
 	if len(data) == 0 {
@@ -52,7 +52,17 @@ func Unprotect(data []byte) ([]byte, error) {
 		}
 	}
 
-	defer procLocalFree.Call(uintptr(unsafe.Pointer(out.Data)))
+	defer func() {
+		r1,_,freeError := procLocalFree.Call(uintptr(unsafe.Pointer(out.Data)))
+		if r1 != 0 && err == nil {
+			err = &config.FunctionFailError{
+				Cause: freeError.Error(),
+				Message: `The pointer to the out Data cant be cleared by the application`,
+				ElapsedTime: time.Now(),
+				Provider: `dpapi.Unprotect`,
+			}
+		}
+	}()
 
 	result := make([]byte, out.Size)
 

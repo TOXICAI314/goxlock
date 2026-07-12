@@ -31,7 +31,7 @@ const (
 )
 
 // Protect : Will encrypt the data that is given to it by the os level encryption
-func Protect(data []byte) ([]byte, error) {
+func Protect(data []byte) (retdat []byte,err error) {
 	// Pre Safety Check 
 	if len(data) == 0 {
 		return nil, &config.FunctionCancelError{
@@ -103,7 +103,18 @@ func Protect(data []byte) ([]byte, error) {
 	// Info : As data is from `dll` that is made on `C` and `C++`
 	// The memory has to be freed from our side (via a strict order) by another dll
 	// And as out.Data already contains the `datablob`its size is known by the compiler
-	defer procLocalFree.Call(uintptr(unsafe.Pointer(out.Data)))
+	defer func() {
+		r1,_,freeError := procLocalFree.Call(uintptr(unsafe.Pointer(out.Data)))
+		// r1 must not be equals 0 (`procLocalFree` acts like that where 0 -> success and !0 -> error)
+		if r1 != 0 && err == nil {
+			err = &config.FunctionFailError{
+				Cause: freeError.Error(),
+				Message: `The pointer to the out Data cant be cleared by the application`,
+				ElapsedTime: time.Now(),
+				Provider: `dpapi.Protect`,
+			}
+		}
+	}()
 
 	// Extraction 
 	result := make([]byte, out.Size)
