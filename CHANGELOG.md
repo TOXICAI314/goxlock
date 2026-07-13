@@ -1,6 +1,6 @@
 # UPDATE INFO
 
-Following are the changes made in the `v1.1.2-Beta` update:
+Following are the changes made in the `v1.1.0-Beta` update:
 
 ## Fixed Bugs 
 
@@ -62,7 +62,7 @@ Following are the changes made in the `v1.1.2-Beta` update:
 
 - `logs` will now have the os and application info.
 
-- `--release` argument has been added (beta test).
+- `--report` argument has been added (beta test).
 
 ## Delayed Updates
 

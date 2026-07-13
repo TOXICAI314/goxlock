@@ -18,16 +18,16 @@ import (
 // - Release
 // Gets the release wanted by the application (focused on the latest)
 type Release struct {
-    TagName string `json:"tag_name"`
-    Assets  []Asset `json:"assets"`
+	TagName string  `json:"tag_name"`
+	Assets  []Asset `json:"assets"`
 }
 
 // - Asset
 // The data required to get the download data
 type Asset struct {
-    Name 				string `json:"name"`
-    BrowserDownloadURL 	string `json:"browser_download_url"`
-	ShaDigest			string `json:"digest"`
+	Name               string `json:"name"`
+	BrowserDownloadURL string `json:"browser_download_url"`
+	ShaDigest          string `json:"digest"`
 }
 
 // This will check for update from trusted sources
@@ -37,17 +37,17 @@ func CheckForUpdate() (err error) {
 	client := &http.Client{
 		Timeout: 30 * time.Second,
 	}
-	url := github.GithubLatestReleaseURL
-	resp,err := client.Get(url)
+	url := github.GithubLatestReleaseAPIURL
+	resp, err := client.Get(url)
 	if err != nil {
 		return &config.FunctionFailError{
-			Cause: err.Error(),
-			Message: fmt.Sprintf(`No such web data or history found on - %s`,url),
+			Cause:       err.Error(),
+			Message:     fmt.Sprintf(`No such web data or history found on - %s`, url),
 			ElapsedTime: time.Now(),
-			Provider: `unlocker.CheckUpdates`,
+			Provider:    `unlocker.CheckUpdates`,
 		}
 	}
-	defer func ()  {
+	defer func() {
 		closErr := resp.Body.Close()
 		if closErr != nil && err == nil {
 			err = closErr
@@ -55,73 +55,73 @@ func CheckForUpdate() (err error) {
 	}()
 	if resp.StatusCode != http.StatusOK {
 		return &config.FunctionCancelError{
-			Cause: `Expected an ok status code`,
-			Message: fmt.Sprintf(`Expected a 200 status code , got - %d`,resp.StatusCode),
+			Cause:       `Expected an ok status code`,
+			Message:     fmt.Sprintf(`Expected a 200 status code , got - %d`, resp.StatusCode),
 			ElapsedTime: time.Now(),
-			Provider: `unlocker.CheckUpdates`,
+			Provider:    `unlocker.CheckUpdates`,
 		}
 	}
 
-	data,err := io.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return &config.FunctionFailError{
-			Cause: err.Error(),
-			Message: `The given data is not in readable format`,
+			Cause:       err.Error(),
+			Message:     `The given data is not in readable format`,
 			ElapsedTime: time.Now(),
-			Provider: `unlocker.CheckUpdates`,
+			Provider:    `unlocker.CheckUpdates`,
 		}
 	}
 
 	var release Release
-	err = json.Unmarshal(data,&release)
+	err = json.Unmarshal(data, &release)
 	if err != nil {
 		return &config.FunctionFailError{
-			Cause: err.Error(),
-			Message: `Expected a json like data but got otherwise`,
+			Cause:       err.Error(),
+			Message:     `Expected a json like data but got otherwise`,
 			ElapsedTime: time.Now(),
-			Provider: `unlocker.CheckUpdates`,
+			Provider:    `unlocker.CheckUpdates`,
 		}
 	}
 
 	if release.TagName == `v`+config.Version {
-		fmt.Printf(`Already the latest verison of the app installed - %s`,config.Version)
+		fmt.Printf(`Already the latest verison of the app installed - %s`, config.Version)
 		return nil
 	}
 
 	ans := utils.GetYesORNo(fmt.Sprintf(`
 		A new version of 'goxlock' is found - %s
-		Want to update? (y/n) : `,release.TagName))
-	
+		Want to update? (y/n) : `, release.TagName))
+
 	if !ans {
 		return nil
 	}
 
-	permittedTempFile,err := os.CreateTemp(``,`goxlock-updated-installer-*.exe`)
+	permittedTempFile, err := os.CreateTemp(``, `goxlock-updated-installer-*.exe`)
 	if err != nil {
 		return &config.FunctionFailError{
-			Cause: `Access denied to the temp dir`,
-			Message: `The access to the temporart directory is not given`,
+			Cause:       `Access denied to the temp dir`,
+			Message:     `The access to the temporart directory is not given`,
 			ElapsedTime: time.Now(),
-			Provider: `unlocker.CheckUpdates`,
+			Provider:    `unlocker.CheckUpdates`,
 		}
 	}
 
 	var index int
 	var found bool
-	for i,data := range release.Assets {
+	for i, data := range release.Assets {
 		if data.Name != `goxlock_setup.exe` {
 			continue
 		}
-		exedresp,err := http.Get(data.BrowserDownloadURL)
+		exedresp, err := http.Get(data.BrowserDownloadURL)
 		if err != nil {
 			return &config.FunctionFailError{
-				Cause: err.Error(),
-				Message:fmt.Sprintf(`Cannot fetch from the the url that is given for the latest update - %s`,release.Assets[0].BrowserDownloadURL),
+				Cause:       err.Error(),
+				Message:     fmt.Sprintf(`Cannot fetch from the the url that is given for the latest update - %s`, release.Assets[0].BrowserDownloadURL),
 				ElapsedTime: time.Now(),
-				Provider: `unlocker.CheckUpdates`,
+				Provider:    `unlocker.CheckUpdates`,
 			}
 		}
-		defer func ()  {
+		defer func() {
 			closErr := exedresp.Body.Close()
 			if closErr != nil && err == nil {
 				err = closErr
@@ -129,20 +129,20 @@ func CheckForUpdate() (err error) {
 		}()
 		if exedresp.StatusCode != http.StatusOK {
 			return &config.FunctionCancelError{
-				Cause: `Expected an ok status code`,
-				Message: fmt.Sprintf(`Expected a 200 status code , got - %d`,resp.StatusCode),
+				Cause:       `Expected an ok status code`,
+				Message:     fmt.Sprintf(`Expected a 200 status code , got - %d`, resp.StatusCode),
 				ElapsedTime: time.Now(),
-				Provider: `unlocker.CheckUpdates`,
+				Provider:    `unlocker.CheckUpdates`,
 			}
 		}
 
-		_,err = io.Copy(permittedTempFile,exedresp.Body)
+		_, err = io.Copy(permittedTempFile, exedresp.Body)
 		if err != nil {
 			return &config.FunctionFailError{
-				Cause: err.Error(),
-				Message: `Cannot copy the data into the temp file to install the update`,
+				Cause:       err.Error(),
+				Message:     `Cannot copy the data into the temp file to install the update`,
 				ElapsedTime: time.Now(),
-				Provider: `unlocker.CheckUpdates`,
+				Provider:    `unlocker.CheckUpdates`,
 			}
 		}
 		index = i
@@ -151,22 +151,22 @@ func CheckForUpdate() (err error) {
 
 	if !found {
 		return &config.FunctionCancelError{
-			Cause: `No exe url found to download`,
-			Message: `Expected exe url got none`,
+			Cause:       `No exe url found to download`,
+			Message:     `Expected exe url got none`,
 			ElapsedTime: time.Now(),
-			Provider: `unlocker.CheckUpdates`,
+			Provider:    `unlocker.CheckUpdates`,
 		}
-	} 
+	}
 
-	permittedTempFile.Seek(0,0)
+	permittedTempFile.Seek(0, 0)
 	hash := sha256.New()
-	_,err = io.Copy(hash,permittedTempFile)
+	_, err = io.Copy(hash, permittedTempFile)
 	if err != nil {
 		return &config.FunctionFailError{
-			Cause: err.Error(),
-			Message: `The given hash cannot be made from the downloaded file`,
+			Cause:       err.Error(),
+			Message:     `The given hash cannot be made from the downloaded file`,
 			ElapsedTime: time.Now(),
-			Provider: `unlocker.CheckUpdates`,
+			Provider:    `unlocker.CheckUpdates`,
 		}
 	}
 	actualDigest := fmt.Sprintf("%x", hash.Sum(nil))
@@ -177,26 +177,26 @@ func CheckForUpdate() (err error) {
 
 	if !strings.EqualFold(actualDigest, expectedDigest) {
 		return &config.FunctionCancelError{
-			Cause: `Unmatched Hashes`,
-			Message: fmt.Sprintf("The hashes are unmatched from the provided hash\nProvided - %s\nExpected - %s",actualDigest,expectedDigest),
+			Cause:       `Unmatched Hashes`,
+			Message:     fmt.Sprintf("The hashes are unmatched from the provided hash\nProvided - %s\nExpected - %s", actualDigest, expectedDigest),
 			ElapsedTime: time.Now(),
-			Provider: `unlocker.CheckUpdates`,
+			Provider:    `unlocker.CheckUpdates`,
 		}
 	}
 
 	cmd := exec.Command(
-				"cmd", 
-				"/c", 
-				"timeout /t 5 /nobreak > NUL && "+permittedTempFile.Name(),
-				"/NORESTART",
-			)
+		"cmd",
+		"/c",
+		"timeout /t 5 /nobreak > NUL && "+permittedTempFile.Name(),
+		"/NORESTART",
+	)
 	err = cmd.Start()
 	if err != nil {
 		return &config.FunctionFailError{
-			Cause: err.Error(),
-			Message: `Cannot start the update of the executable file`,
+			Cause:       err.Error(),
+			Message:     `Cannot start the update of the executable file`,
 			ElapsedTime: time.Now(),
-			Provider: `unlocker.CheckUpdates`,
+			Provider:    `unlocker.CheckUpdates`,
 		}
 	}
 	fmt.Printf("Exitting the Program to redownload the application\nThe download will start after 5 sec .")

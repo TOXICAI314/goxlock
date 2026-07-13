@@ -8,12 +8,6 @@ import (
 	"time"
 )
 
-const (
-	GithubURL              string = `https://api.github.com/repos/TOXICAI314/goxlock`
-	GithubLatestReleaseURL string = GithubURL + `/releases/latest`
-	GithubReportURL        string = GithubURL + `/issues/new`
-)
-
 // reports to the provided github link by the url manipulationn and input system
 func Report() (err error) {
 	fmt.Print(`Choose the integral value to use for the report`)

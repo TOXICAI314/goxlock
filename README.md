@@ -144,7 +144,7 @@ There are vasr number of commands and behaviour you can choose from. Following l
 19. `make-profile`      : Makes the profile of the user as per name
 20. `profile-name`      : Stores the name of the profile
 21. `where`             : Gives the current executable location
-22. `release`           : Reports the application with given issue
+22. `report`           : Reports the application with given issue
 
 ## Security
 
