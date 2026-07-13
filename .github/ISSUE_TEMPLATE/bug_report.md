@@ -26,3 +26,4 @@ assignees: ""
 
 ## Logs
 
+- Add a little data of the log file where the bug ocured (with resonable `version_info`) to confirm your claim.
