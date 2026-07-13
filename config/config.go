@@ -11,8 +11,8 @@ import (
 // Version : The way that the data will be read in the future
 const (
 	VersionMajor = 1
-	VersionMinor = 1
-	Patch        = 0
+	VersionMinor = 0
+	Patch        = 3
 	Release      = beta
 )
 
