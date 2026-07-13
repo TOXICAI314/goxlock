@@ -23,12 +23,13 @@ var (
 // It can be switched from user to user to get the certainity of what the user wanted before
 // No sesitive data will stored in the struct , Only the data that is based on preference is stored
 type Profiler struct {
+	VersionInfo		string				`json:"version_info"`
 	// Name : The main Name that the profile will be called
-	Name string `json:"name"`
+	Name 			string 				`json:"name"`
 	// Output : Taken from the parent `config.Config.OutputName`
-	OutputName string `json:"outputname"`
+	OutputName 		string 				`json:"outputname"`
 	// Instructions : Taken from the parent `config.Config.InstructionsData`
-	Instruction config.Instructions `json:"instructions"`
+	Instruction 	config.Instructions `json:"instructions"`
 }
 
 // Validate

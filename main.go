@@ -2,7 +2,6 @@ package main
 
 import (
 	"goxlock/cmd"
-	"log"
 )
 
 /*
@@ -13,11 +12,8 @@ import (
 */
 
 func main() {
-	// - Execution Starts 
+	// Execution Starts 
 	// Info : This execution includes the calling of root command done in `cmd/root.go`
 	// Any Error passed through it will be counted here and will act as Fatal error
-	err := cmd.Execute()
-	if err != nil {
-		log.Fatalf("Crtical error : %s",err.Error())
-	}
+	cmd.Execute()
 }

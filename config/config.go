@@ -11,7 +11,7 @@ import (
 // Version : The way that the data will be read in the future
 const (
 	VersionMajor = 1
-	VersionMinor = 0
+	VersionMinor = 1
 	Patch        = 2
 	Release      = beta
 )
@@ -85,6 +85,7 @@ func init() {
 // - Config
 // Config : Stores the basic user request to be forwarded afterwards
 type Config struct {
+	Version 	   string
 	SessionID      string
 	StartedAt      time.Time
 	FolderName     string
@@ -131,6 +132,9 @@ func (cfg *Config) Structure() error {
 	}
 	if cfg.StartedAt.IsZero() {
 		cfg.StartedAt = time.Now()
+	}
+	if cfg.Version == `` {
+		cfg.Version  = VersionRelease
 	}
 	// Vulnerability Checker for the filepath (no escaping quotes)
 	cfg.FolderName = filepath.Clean(cfg.FolderName)

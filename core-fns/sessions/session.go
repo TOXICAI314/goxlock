@@ -19,6 +19,7 @@ var (
 
 // Is the struct that will record all the user important details to use them further when needed
 type Session struct {
+	VersionInfo		string				`json:"version_info"`
 	Id              string              `json:"id"`
 	Folder          string              `json:"folder"`
 	Password        []byte              `json:"password"`

@@ -19,9 +19,7 @@ func (pf *Profiler) Update(outname string, instruction *config.Instructions) err
 	if outname != `` {
 		pf.OutputName = outname
 	}
-	if pf.Instruction.DeleteOriginal != instruction.DeleteOriginal {
-		pf.Instruction.DeleteOriginal = instruction.DeleteOriginal
-	}
+	pf.Instruction.DeleteOriginal = instruction.DeleteOriginal
 	if len(instruction.Exclusion) != 0 {
 		pf.Instruction.Exclusion = instruction.Exclusion
 	}

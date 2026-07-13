@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"goxlock/config"
+	"goxlock/core-fns/github"
 	"goxlock/utils"
 	"io"
 	"net/http"
@@ -36,7 +37,7 @@ func CheckForUpdate() (err error) {
 	client := &http.Client{
 		Timeout: 30 * time.Second,
 	}
-	url := `https://api.github.com/repos/TOXICAI314/goxlock/releases/latest`
+	url := github.GithubLatestReleaseURL
 	resp,err := client.Get(url)
 	if err != nil {
 		return &config.FunctionFailError{

@@ -1,6 +1,6 @@
 # UPDATE INFO
 
-Following are the changes made in the `v1.0.2-Beta` update:
+Following are the changes made in the `v1.1.2-Beta` update:
 
 ## Fixed Bugs 
 
@@ -32,6 +32,8 @@ Following are the changes made in the `v1.0.2-Beta` update:
 
 - `defer` calls not contributing to the error significance.
 
+- The `scheduler` would not work if used `--unsafe`.
+
 ## Design Improvement
 
 - Made the error message better -> Classified in two factors : FunctionCacelError (for self killing) & FucntionFailError (killed by an error).
@@ -57,6 +59,10 @@ Following are the changes made in the `v1.0.2-Beta` update:
 - Added a delay to the Updater so that it gets a valid time to react.
 
 - Named returned to defer blocks.
+
+- `logs` will now have the os and application info.
+
+- `--release` argument has been added (beta test).
 
 ## Delayed Updates
 

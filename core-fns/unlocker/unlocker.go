@@ -128,6 +128,7 @@ func Unlocker(cfg *config.Config) error {
 		scheduleID := cfg.SessionID
 
 		s := &sessions.Session{
+			VersionInfo: 	cfg.Version,
 			Id:             scheduleID,
 			Folder:         strings.TrimSuffix(*outFolder, config.ZipExt),
 			Password:       protectedPassword,

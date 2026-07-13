@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"goxlock/config"
 	"goxlock/core-fns/doctor"
+	"goxlock/core-fns/github"
 	"goxlock/core-fns/logger"
 	"goxlock/core-fns/performer"
 	"goxlock/core-fns/profiler"
@@ -91,7 +92,12 @@ var (
 
 	// TUI
 	// The triggering point of tui
-	serve_tui 		bool
+	serve_tui 	bool
+
+	// Report
+
+	// triggers the report function
+	report 		bool
 )
 
 // One time runners
@@ -147,6 +153,8 @@ var rootcmd *cobra.Command = &cobra.Command{
 
 		// These will fire and return without encroaching the action
 		switch {
+		case report:
+			return github.Report()
 		case checkupdate:
 			return updater.CheckForUpdate()
 		case where:
@@ -203,6 +211,7 @@ var rootcmd *cobra.Command = &cobra.Command{
 				}
 			}
 			pf := &profiler.Profiler{
+				VersionInfo: config.VersionRelease,
 				Name:       profileName,
 				OutputName: OutputName,
 				Instruction: config.Instructions{
@@ -235,6 +244,7 @@ var rootcmd *cobra.Command = &cobra.Command{
 		// Updates the profile by getting all the inputs -> Fetching all the data -> Rewritting a new set of data
 		case updateprofile:
 			pf := &profiler.Profiler{
+				VersionInfo: config.VersionRelease,
 				Name: profileName,
 			}
 			instr := &config.Instructions{
@@ -308,7 +318,7 @@ var rootcmd *cobra.Command = &cobra.Command{
 
 		var Timeout time.Duration
 		var err error
-		var ans bool
+		var ans bool = unsafe
 		if timeoutS != `` {
 			if !unsafe {
 				// - Confirmation
@@ -518,6 +528,7 @@ func init() {
 	rootcmd.Flags().BoolVar(&readlog, `read-log`, false, `Toggle the read log function`)
 	rootcmd.Flags().StringVar(&logdate, `log-date`, ``, `Gives the log date to instructor`)
 	rootcmd.Flags().BoolVar(&where,`where`,false,`Gives current working executable path`)
+	rootcmd.Flags().BoolVar(&report,`report`,false,`Reports the application with given issue`)
 
 	// Profile
 	rootcmd.Flags().BoolVar(&makeprofile, `make-profile`, false, `Makes the profile of the user as per name`)
