@@ -32,5 +32,5 @@ func BugReport() (url string, err error) {
 			}
 		}
 	}
-	return fmt.Sprintf(`%s?template=bug_report.md&body=%23%23Logs%20%20%+v`, GithubReportURL, retData), nil
+	return fmt.Sprintf(`%s?template=bug_report.md&body=%+v`, GithubReportURL, retData), nil
 }

@@ -1,14 +1,14 @@
-# BUG REPORT
-
+---
 name: Bug Report
-
-version: ...
-
-about: Report a bug in `goxlock`
-
+about: Report a bug in GoXLock
 title: "[BUG]: "
-
 labels: bug
+assignees: ""
+---
+
+## GoXLock Version
+
+...
 
 ## Describe the bug
 
@@ -20,10 +20,9 @@ labels: bug
 2.
 3.
 
-## Expected behaviour
+## Expected behavior
 
 ...
 
-## Additional information
+## Logs
 
-...

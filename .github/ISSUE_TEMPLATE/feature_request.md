@@ -1,14 +1,14 @@
-# FEATURE REQUEST
-
+---
 name: Feature Request
-
-version : ...
-
-about: Suggest a new idea or enhancement for `goxlock`
-
+about: Suggest a new idea or enhancement for GoXLock
 title: "[FEATURE]: "
-
 labels: enhancement
+assignees: ""
+---
+
+## GoXLock Version
+
+...
 
 ## Describe the feature
 
@@ -18,7 +18,7 @@ labels: enhancement
 
 ...
 
-## Possible implementation / Solutions
+## Possible implementation
 
 ...
 

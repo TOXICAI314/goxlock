@@ -1,24 +1,15 @@
-# QUESTION & SUPPORT
+---
+name: Support / Question
+about: Ask a question
+title: "[QUESTION]: "
+labels: question
+assignees: ""
+---
 
-name: Question & Support
-
-version: ...
-
-about: Ask a question or get help using `goxlock`
-
-title: "[SUPPORT]: "
-
-labels: question, help wanted
-
-## What do you need help with?
+## Question
 
 ...
 
-## Context / What are you trying to achieve?
+## Additional context
 
 ...
-
-## What have you tried so far?
-
-...
-
